@@ -5,9 +5,10 @@
 #include "game.h"
 
 Case* getCurrentCase(const std::array<std::array<Case*, 9>, 9> &grid, const Pos &pos);
-
 bool isNumberKey(int key);
 void refreshCurrent(Case* current, int key);
+void getGraphicGrid(const Grid &grid, std::array<std::array<Case*, 9>, 9> &graphicGrid);
+void destroyGraphicGrid(std::array<std::array<Case*, 9>, 9> &graphicGrid);
 
 int main(int argc, char* argv[]){
     SDL_Init(SDL_INIT_VIDEO);
@@ -20,20 +21,17 @@ int main(int argc, char* argv[]){
     SpriteManager manager(window);
     AbstractSprite::setSpriteManager(manager);
 
-    Case::loadTexture();
+    Case::loadTexture(manager);
 
     Grid grille(generateValidGrid(81));
+
+    std::cout << "Grille generee" << std::endl;
+
     printGrid(grille);
 
     std::array<std::array<Case*, 9>, 9> test;
-    for(int i(0); i<9; i++){
-        for(int j(0); j<9; j++){
-            test[i][j] = new Case({j*CASE_LENGTH+(j+1)*CASE_SPACE, i*CASE_LENGTH+(i+1)*CASE_SPACE}, grille[i][j]);
-            if(grille[i][j] != 0){
-                test[i][j]->lock();
-            }
-        }
-    }
+
+    getGraphicGrid(grille, test);
 
     std::cout << "Cases créées" << std::endl;
 
@@ -43,12 +41,6 @@ int main(int argc, char* argv[]){
     std::cout << verifyGrid(grille) << std::endl;
 
     Case* current(0);
-
-    // for(int i(0); i<9; i++){
-    //     for(int j(0); j<9; j++){
-    //         std::cout << (j)/3+((int)((i)/3))*3 << std::endl;
-    //     }
-    // }
 
     bool quit(false);
     SDL_Event event;
@@ -76,6 +68,16 @@ int main(int argc, char* argv[]){
                         std::cout << "Number Key pressed" << std::endl;
                         refreshCurrent(current, event.key.keysym.sym);
                     }
+                    switch(event.key.keysym.sym){
+                        case SDLK_r:
+                            grille = generateValidGrid(81);
+                            destroyGraphicGrid(test);
+                            getGraphicGrid(grille, test);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -89,11 +91,7 @@ int main(int argc, char* argv[]){
         SDL_RenderPresent(renderer);
     }
 
-    for(int i(0); i<9; i++){
-        for(int j(0); j<9; j++){
-            delete test[i][j];
-        }
-    }
+    destroyGraphicGrid(test);
 
     Case::destroyTexture();
 
@@ -146,5 +144,25 @@ void refreshCurrent(Case* current, int key){
     }
     if(current != 0){
         current->setValue(index);
+    }
+}
+
+void getGraphicGrid(const Grid &grid, std::array<std::array<Case*, 9>, 9> &graphicGrid){
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            graphicGrid[i][j] = new Case({j*CASE_LENGTH+(j+1)*CASE_SPACE, i*CASE_LENGTH+(i+1)*CASE_SPACE}, grid[i][j]);
+            if(grid[i][j] != 0){
+                graphicGrid[i][j]->lock();
+            }
+        }
+    }
+}
+
+void destroyGraphicGrid(std::array<std::array<Case*, 9>, 9> &graphicGrid){
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            delete graphicGrid[i][j];
+            graphicGrid[i][j] = 0;
+        }
     }
 }
