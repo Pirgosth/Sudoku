@@ -59,6 +59,8 @@ Grid generateValidGrid(int n){
     std::mt19937 gen(rd());
     int breakCount(0);
 
+    int nodesReached(0);
+
     for(int k(0); k<n; k++){
         if(breakCount > 10){
             break;
@@ -80,6 +82,7 @@ Grid generateValidGrid(int n){
         bool isNodeValid(true);
 
         do{
+            nodesReached++;
             //If there is no more validValues, node is invalid
             if(validValues.size() == 0){
                 isNodeValid = false;
@@ -100,7 +103,11 @@ Grid generateValidGrid(int n){
                 validValues.erase(validValues.begin()+rv);
             }
 
-        }while(!verifyGrid(grid));
+        }while(!(verifyLine(grid, k/9) && verifyColumn(grid, k%9) && verifySquare(grid, (int)((k/9)/3)*3+((k%9)/3))));
+        // printGrid(grid);
+        // std::cout << "Carre: " << (int)((k/9)/3)*3+((k%9)/3) << "\tligne: " << k/9 << "\tcolonne: " << k%9 << std::endl;
+        // std::system("read");
+        // }while(!verifyGrid(grid));
         if(!isNodeValid){
             // printGrid(grid);
             currentNode->setValidity(false);
@@ -121,24 +128,28 @@ Grid generateValidGrid(int n){
         currentNode = (*currentNode)[currentValue-1];
     }
 
+    std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
     return grid;
 }
 
-SDL_Texture* Case::g_texture(0);
+SDL_Texture* Case::g_texture_default(0);
+SDL_Texture* Case::g_texture_selected(0);
 Font* Case::g_font(0);
 
 void Case::loadTexture(const SpriteManager &manager){
-    g_texture = _load_texture_from_file(manager.getContext().renderer, "./sources/default.png");
+    g_texture_default = _load_texture_from_file(manager.getContext().renderer, "./sources/default.png");
+    g_texture_selected = _load_texture_from_file(manager.getContext().renderer, "./sources/selected.png");
     g_font = new Font("/usr/share/fonts/TTF/DejaVuSans.ttf");
 }
 
 void Case::destroyTexture(){
     delete g_font;
-    SDL_DestroyTexture(g_texture);
+    SDL_DestroyTexture(g_texture_selected);
+    SDL_DestroyTexture(g_texture_default);
 }
 
 Case::Case(Pos pos, int i){
-    m_sprite = new Sprite(g_texture, pos, {CASE_LENGTH, CASE_LENGTH});
+    m_sprite = new Sprite(g_texture_default, pos, {CASE_LENGTH, CASE_LENGTH});
     m_texte = new TextSprite("a", pos, {}, *g_font, {255, 255, 255, 255}, 30, {0, 0, 0, 0});
     m_texte->pos({m_sprite->pos().x+(m_sprite->size().w-m_texte->size().w)/2, m_sprite->pos().y +(m_sprite->size().h-m_texte->size().h)/2});
     setValue(i);
@@ -183,6 +194,15 @@ Case::~Case(){
     delete m_sprite;
 }
 
+void Case::setIsSelected(bool isSelected){
+    if(isSelected){
+        m_sprite->setTexture(g_texture_selected);
+    }
+    else{
+        m_sprite->setTexture(g_texture_default);
+    }
+}
+
 bool verifyLine(const Grid &grid, int i){
     std::array<int, 9> count;
     for(int j(0); j<9; j++){
@@ -216,6 +236,7 @@ bool verifyColumn(const Grid &grid, int j){
 }
 
 bool verifySquare(const Grid &grid, int n){
+    // std::cout << "n = " << n << std::endl;
     std::array<int, 9> count;
     for(int i(0); i<9; i++){
         count[i] = 0;
@@ -223,14 +244,18 @@ bool verifySquare(const Grid &grid, int n){
 
     for(int i(0); i<3; i++){
         for(int j(0); j<3; j++){
-            if(grid[(n%3)*3+i][(int)(n/3)*3+j] != 0){
-                count[grid[(n%3)*3+i][(int)(n/3)*3+j]-1] += 1;
-                if(count[grid[(n%3)*3+i][(int)(n/3)*3+j]-1]> 1){
+            int p((int)(n/3)*3+i), q((n%3)*3+j);
+            // std::cout << "(" << p << "," << q << "): " << grid[p][q] << ",";
+            if(grid[p][q] != 0){
+                count[grid[p][q]-1] += 1;
+                if(count[grid[p][q]-1]> 1){
+                    // std::cout << std::endl;
                     return false;
                 }
             }
         }
-    }   
+    }
+    // std::cout << std::endl;    
     return true;
 }
 
@@ -278,6 +303,12 @@ bool Branch<N>::isValid(){
 template<int N>
 void Branch<N>::setValidity(bool validity){
     m_isValid = validity;
+    // if(!validity){
+    //     for(auto node = m_nodes.begin(); node != m_nodes.end(); node++){
+    //         delete (*node);
+    //         (*node) = 0;
+    //     }
+    // }
 }
 
 template<int N>

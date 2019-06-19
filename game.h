@@ -22,7 +22,8 @@ class Case{
 private:
     Sprite *m_sprite = 0;
     TextSprite *m_texte = 0;
-    static SDL_Texture* g_texture;
+    static SDL_Texture* g_texture_default;
+    static SDL_Texture* g_texture_selected;
     static Font *g_font;
     int m_value = 0;
     bool m_isLocked = false;
@@ -37,6 +38,7 @@ public:
     void lock();
     void unlock();
     bool isLocked();
+    void setIsSelected(bool isSelected);
 };
 
 bool verifyLine(const Grid &grid, int i);
