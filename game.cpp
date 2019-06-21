@@ -28,20 +28,7 @@ void printGrid(const Grid &grid){
     }
 }
 
-std::vector<int> generateValues(std::vector<int> validValues){
-    std::vector<int> values(81, -1);
-    for(int i(0); i<9; i++){
-        for(int j(0); j<9; j++){
-            values[i*9+j] = i+1;
-        }
-    }
-    for(auto value = validValues.begin(); value!=validValues.end(); value++){
-        values.erase(std::find(values.begin(), values.end(), *value));
-    }
-    return values;
-}
-
-Grid generateValidGrid(int n){
+Grid generateValidGrid(int n, int *nodeCount){
 
     Grid grid(createEmptyGrid());
 
@@ -57,14 +44,10 @@ Grid generateValidGrid(int n){
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    int breakCount(0);
 
     int nodesReached(0);
 
     for(int k(0); k<n; k++){
-        if(breakCount > 10){
-            break;
-        }
         //Generate vector of validValues for the k-th element
         std::vector<std::pair<int, int>> validValues;
         if(currentNode!=0){
@@ -105,6 +88,9 @@ Grid generateValidGrid(int n){
 
         }while(!(verifyLine(grid, k/9) && verifyColumn(grid, k%9) && verifySquare(grid, (int)((k/9)/3)*3+((k%9)/3))));
         // printGrid(grid);
+        // getLineValues(grid, k/9);
+        // getColumnValues(grid, k%9);
+        // getSquareValues(grid, (int)((k/9)/3)*3+((k%9)/3));
         // std::cout << "Carre: " << (int)((k/9)/3)*3+((k%9)/3) << "\tligne: " << k/9 << "\tcolonne: " << k%9 << std::endl;
         // std::system("read");
         // }while(!verifyGrid(grid));
@@ -118,18 +104,50 @@ Grid generateValidGrid(int n){
             k-=2;
             continue;
         }
-        currentValue = grid[k/9][k%9];
-        for(int i(0); i<9; i++){
-            (*currentNode)[currentValue-1]->addNode(new Branch<9>(i != currentValue-1, i==currentValue-1 ? (*currentNode)[i]->getCount()-1: (*currentNode)[i]->getCount()), i);
+        if(k < 80){
+            currentValue = grid[k/9][k%9];
+            std::array<int, 9> lv(getLineValues(grid, (k+1)/9)), cv(getColumnValues(grid, (k+1)%9)), sv(getSquareValues(grid, (int)(((k+1)/9)/3)*3+(((k+1)%9)/3)));
+
+            for(int i(0); i<9; i++){
+                bool validity(true);
+                validity = lv[i] == 1 && cv[i] == 1 && sv[i] == 1;
+                (*currentNode)[currentValue-1]->addNode(new Branch<9>(validity, i == currentValue-1 ? (*currentNode)[i]->getCount()-1: (*currentNode)[i]->getCount()), i);
+            }
+
+            valuesHistory.push_back(currentValue);
+            nodesHistory.push_back(currentNode);
+            currentNode = (*currentNode)[currentValue-1];
         }
-
-        valuesHistory.push_back(currentValue);
-        nodesHistory.push_back(currentNode);
-        currentNode = (*currentNode)[currentValue-1];
     }
-
-    std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
+    if(nodeCount != 0)
+      *nodeCount = nodesReached;
+    // std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
     return grid;
+}
+
+float averageGridNodeCount(const int n){
+    std::vector<int> values;
+    float totalNodeCount(0);
+    int currentNodeCount(0);
+    int timeout = SDL_GetTicks();
+    for(int i(0); i<n; i++){
+        generateValidGrid(81, &currentNodeCount);
+        // std::cout << currentNodeCount << std::endl;
+        values.push_back(currentNodeCount);
+        totalNodeCount+=currentNodeCount;
+    }
+    float average(totalNodeCount/n);
+    float sigma(0);
+    for(int i(0); i<(int)values.size(); i++){
+        sigma += std::pow(values[i]-average, 2);
+    }
+    sigma /= n;
+    sigma = std::sqrt(sigma);
+    float confiance = 2*sigma/(std::sqrt(n));
+    float xmin(average-confiance), xmax(average+confiance);
+    std::cout << "Simulation took: " << (SDL_GetTicks()-timeout)/1000.0 <<  " seconds" << std::endl;
+    std::cout << "Confidence interval: [" << xmin << ";" << xmax << "]" << std::endl;
+    return average;
 }
 
 SDL_Texture* Case::g_texture_default(0);
@@ -266,6 +284,60 @@ bool verifyGrid(const Grid &grid){
         }
     }
     return true;
+}
+
+std::array<int, 9> getLineValues(const Grid &grid, int i){
+    std::array<int, 9> values;
+    for(int j(0); j<9; j++){
+        values[j] = 1;
+    }
+    for(int j(0); j<9; j++){
+        if(grid[i][j] != 0){
+            values[grid[i][j]-1] = 0;
+        }
+    }
+    // for(int j(0); j<9; j++){
+    //     std::cout << values[j] << ",";
+    // }
+    // std::cout << std::endl;
+    return values;
+}
+
+std::array<int, 9> getColumnValues(const Grid &grid, int j){
+    std::array<int, 9> values;
+    for(int i(0); i<9; i++){
+        values[i] = 1;
+    }
+    for(int i(0); i<9; i++){
+        if(grid[i][j] != 0){
+            values[grid[i][j]-1] = 0;
+        }
+    }
+    // for(int i(0); i<9; i++){
+    //     std::cout << values[i] << ",";
+    // }
+    // std::cout << std::endl;
+    return values;
+}
+
+std::array<int, 9> getSquareValues(const Grid &grid, int n){
+    std::array<int, 9> values;
+    for(int j(0); j<9; j++){
+        values[j] = 1;
+    }
+    for(int i(0); i<3; i++){
+        for(int j(0); j<3; j++){
+            int p((int)(n/3)*3+i), q((n%3)*3+j);
+            if(grid[p][q] != 0){
+                values[grid[p][q]-1] = 0;
+            }
+        }
+    }
+    // for(int i(0); i<9; i++){
+    //     std::cout << values[i] << ",";
+    // }
+    // std::cout << std::endl;
+    return values;
 }
 
 template<int N>

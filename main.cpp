@@ -26,6 +26,10 @@ int main(int argc, char* argv[]){
 
     Case::loadTexture(manager);
 
+    // int nodeAverage = averageGridNodeCount(10000);
+
+    // std::cout << "Nodes encountered average: " << nodeAverage << std::endl;
+
     Grid grille(generateValidGrid(81));
 
     std::cout << "Grille generee" << std::endl;
@@ -78,7 +82,7 @@ int main(int argc, char* argv[]){
                             break;
                     }
                     break;
-                case SDL_KEYUP:
+                case SDL_KEYDOWN:
                     if(isNumberKey(event.key.keysym.sym)){
                         std::cout << "Number Key pressed" << std::endl;
                         refreshCurrent(current, event.key.keysym.sym);

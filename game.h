@@ -15,8 +15,8 @@ typedef std::array<std::array<int, 9>, 9> Grid;
 
 Grid createEmptyGrid();
 void printGrid(const Grid &grid);
-std::vector<int> generateValues(std::vector<int> validValues = std::vector<int>());
-Grid generateValidGrid(int n);
+Grid generateValidGrid(int n, int *nodeCount = 0);
+float averageGridNodeCount(const int n);
 
 class Case{
 private:
@@ -45,6 +45,10 @@ bool verifyLine(const Grid &grid, int i);
 bool verifyColumn(const Grid &grid, int j);
 bool verifySquare(const Grid &grid, int n);
 bool verifyGrid(const Grid &grid);
+
+std::array<int, 9> getLineValues(const Grid &grid, int i);
+std::array<int, 9> getColumnValues(const Grid &grid, int j);
+std::array<int, 9> getSquareValues(const Grid &grid, int n);
 
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
 
