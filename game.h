@@ -50,6 +50,10 @@ std::array<int, 9> getLineValues(const Grid &grid, int i);
 std::array<int, 9> getColumnValues(const Grid &grid, int j);
 std::array<int, 9> getSquareValues(const Grid &grid, int n);
 
+std::vector<int> getCaseValues(const Grid &grid, int i, int j);
+bool isGridSolvent(const Grid &grid);
+Grid generatePlayableGrid(int n);
+
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
 
 template<int N>

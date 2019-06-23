@@ -340,6 +340,78 @@ std::array<int, 9> getSquareValues(const Grid &grid, int n){
     return values;
 }
 
+std::vector<int> getCaseValues(const Grid &grid, int i, int j){
+    auto lv(getLineValues(grid, i)), cv(getColumnValues(grid, j)), sv(getSquareValues(grid, (int)(i/3)*3+(j/3)));
+    std::vector<int> values;
+    for(int k(0); k<9; k++){
+        if(lv[k] && cv[k] && sv[k]){
+            values.push_back(k+1);
+        }
+    }
+    return values;
+}
+
+bool isGridSolvent(const Grid &grid){
+    Grid tmpGrid;
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            tmpGrid[i][j] = grid[i][j];
+        }
+    }
+    // printGrid(tmpGrid);
+    bool hasChanged(true);
+    while(hasChanged){
+        hasChanged = false;
+        for(int i(0); i<9; i++){
+            for(int j(0); j<9; j++){
+                auto values = getCaseValues(tmpGrid, i, j);
+                if(values.size() == 1 && tmpGrid[i][j] == 0){
+                    tmpGrid[i][j] = values[0];
+                    hasChanged = true;
+                }
+            }
+        }
+        // printGrid(tmpGrid);
+        // std::system("read");
+    }
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            if(tmpGrid[i][j] == 0){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+Grid generatePlayableGrid(int n){
+    Grid grid(generateValidGrid(81));
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::vector<int> indexs;
+    for(int i(0); i<81; i++){
+        indexs.push_back(i+1);
+    }
+    while(n != 0 && indexs.size() != 0){
+        std::uniform_int_distribution<> dis(0, indexs.size()-1);
+        int ri(dis(gen));
+        int index(indexs[ri]);
+        int tmpValue = grid[index/9][index%9];
+        grid[index/9][index%9] = 0;
+        // printGrid(grid);
+        if(!isGridSolvent(grid)){
+            grid[index/9][index%9] = tmpValue;
+        }
+        else{
+            // std::cout << "Value removed !" << std::endl;
+            n--;
+        }
+        indexs.erase(indexs.begin()+ri);
+    }
+    std::cout << n << " values have not been removed from grid" << std::endl;
+    return grid;
+}
+
 template<int N>
 Branch<N>::Branch(bool isValid, int count){
     for(auto node = m_nodes.begin(); node!=m_nodes.end(); node++){

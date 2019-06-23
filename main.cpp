@@ -6,9 +6,9 @@
 
 typedef std::array<std::array<Case*, 9>, 9> GraphicGrid;
 
-Case* getCurrentCase(const GraphicGrid &grid, const Pos &pos);
+Pos getCurrentCase(const GraphicGrid &grid, const Pos &pos);
 bool isNumberKey(int key);
-void refreshCurrent(Case* current, int key);
+void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Pos &current, int key);
 void refreshGraphicGrid(const GraphicGrid &graphicGrid, const Grid &grid);
 void getGraphicGrid(const Grid &grid, GraphicGrid &graphicGrid);
 void destroyGraphicGrid(GraphicGrid &graphicGrid);
@@ -30,7 +30,16 @@ int main(int argc, char* argv[]){
 
     // std::cout << "Nodes encountered average: " << nodeAverage << std::endl;
 
-    Grid grille(generateValidGrid(81));
+    Grid grille(generatePlayableGrid(38));
+
+    // for(int i(0); i<9; i++){
+    //     grille[i][i] = 0;
+    //     grille[9-i][i] = 0;
+    // }
+
+    // std::cout << getCaseValues(grille, 0, 0)[0] << std::endl;
+
+    // std::cout << isGridSolvent(grille) << std::endl;
 
     std::cout << "Grille generee" << std::endl;
 
@@ -42,17 +51,17 @@ int main(int argc, char* argv[]){
 
     std::cout << "Cases créées" << std::endl;
 
-    std::cout << verifyLine(grille, 0) << std::endl;
-    std::cout << verifyColumn(grille, 0) << std::endl;
+    // std::cout << verifyLine(grille, 0) << std::endl;
+    // std::cout << verifyColumn(grille, 0) << std::endl;
     // for(int i(0); i<9; i++){
     //     for(int j(0); j<9; j++){
     //         std::cout << "Carre: " << (int)(i/3)*3+(j/3) << std::endl;
     //         std::cout << verifySquare(grille, (int)(i/3)*3+(j/3) << std::endl;
     //     }
     // }
-    std::cout << verifyGrid(grille) << std::endl;
+    // std::cout << verifyGrid(grille) << std::endl;
 
-    Case* current(0);
+    Pos current({-1, -1});
 
     bool quit(false);
     SDL_Event event;
@@ -68,33 +77,41 @@ int main(int argc, char* argv[]){
                         case SDL_BUTTON_LEFT:
                             {Pos tmp;
                             SDL_GetMouseState(&tmp.x, &tmp.y);
-                            if(current != 0){
-                                current->setIsSelected(false);
+                            if(current.x != -1){
+                                test[current.x][current.y]->setIsSelected(false);
                             }
                             current = getCurrentCase(test, tmp);
-                            if(current != 0){
-                                current->setIsSelected(true);
+                            if(current.x != -1){
+                                test[current.x][current.y]->setIsSelected(true);
                             }
                             }
-                            std::cout << current << std::endl;
+                            std::cout << current.x << std::endl;
                             break;
                         default:
                             break;
                     }
                     break;
-                case SDL_KEYDOWN:
+                case SDL_KEYUP:
                     if(isNumberKey(event.key.keysym.sym)){
                         std::cout << "Number Key pressed" << std::endl;
-                        refreshCurrent(current, event.key.keysym.sym);
+                        refreshCurrent(grille, test, current, event.key.keysym.sym);
                     }
                     switch(event.key.keysym.sym){
                         case SDLK_r:
-                            if(current != 0){
-                                current->setIsSelected(false);
+                            if(current.x != -1){
+                                test[current.x][current.y]->setIsSelected(false);
                             }
-                            current = 0;
-                            grille = generateValidGrid(81);
+                            current.x = -1;
+                            grille = generatePlayableGrid(38);
                             refreshGraphicGrid(test, grille);
+                            break;
+                        case SDLK_v:
+                            if(verifyGrid(grille)){
+                                std::cout << "Grille Valide" << std::endl; 
+                            }
+                            else{
+                                std::cout << "Grille Invalide" << std::endl;
+                            }
                             break;
                         default:
                             break;
@@ -126,7 +143,7 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-Case* getCurrentCase(const GraphicGrid &grid, const Pos &pos){
+Pos getCurrentCase(const GraphicGrid &grid, const Pos &pos){
     // float i1((float)(pos.x)/(float)CASE_SPACE), i2((float)(pos.x)/(float)(CASE_SPACE+CASE_LENGTH));
     int x(-1), y(-1);
     for(int k(1); k<10; k++){
@@ -140,9 +157,9 @@ Case* getCurrentCase(const GraphicGrid &grid, const Pos &pos){
         }
     }
     if(x == -1 || y == -1 || grid[y][x]->isLocked()){
-        return nullptr;
+        return {-1, -1};
     }
-    return grid[y][x];
+    return {y, x};
     // std::cout << "Mouse is in case " << x << ":" << y << std::endl;
 }
 
@@ -156,7 +173,7 @@ bool isNumberKey(int key){
     return false;
 }
 
-void refreshCurrent(Case* current, int key){
+void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Pos &current, int key){
     std::array<int, 10> numberKeys = {{SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9}};
     int index(-1);
     for(int i(0); i<10; i++){
@@ -164,8 +181,9 @@ void refreshCurrent(Case* current, int key){
             index = i;
         }
     }
-    if(current != 0){
-        current->setValue(index);
+    if(current.x != -1){
+        graphicGrid[current.x][current.y]->setValue(index);
+        grid[current.x][current.y] = index;
     }
 }
 
