@@ -12,6 +12,7 @@ void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Pos &current, int key)
 void refreshGraphicGrid(const GraphicGrid &graphicGrid, const Grid &grid);
 void getGraphicGrid(const Grid &grid, GraphicGrid &graphicGrid);
 void destroyGraphicGrid(GraphicGrid &graphicGrid);
+void compareGrids(const GraphicGrid &graphicGrid, const Grid &game, const Grid &solution);
 
 int main(int argc, char* argv[]){
     SDL_Init(SDL_INIT_VIDEO);
@@ -24,13 +25,17 @@ int main(int argc, char* argv[]){
     SpriteManager manager(window);
     AbstractSprite::setSpriteManager(manager);
 
+    Sprite gridBg("./sources/grid.png", {0, 0}, {9*CASE_LENGTH+10*CASE_SPACE, 9*CASE_LENGTH+10*CASE_SPACE});
+    gridBg.setColorFilter({200, 200, 200, 0});
+
     Case::loadTexture(manager);
 
     // int nodeAverage = averageGridNodeCount(10000);
 
     // std::cout << "Nodes encountered average: " << nodeAverage << std::endl;
 
-    Grid grille(generatePlayableGrid(38));
+    std::pair<Grid, Grid> grid(generatePlayableGrid(38));
+    Grid grille(grid.first);
 
     // for(int i(0); i<9; i++){
     //     grille[i][i] = 0;
@@ -78,11 +83,17 @@ int main(int argc, char* argv[]){
                             {Pos tmp;
                             SDL_GetMouseState(&tmp.x, &tmp.y);
                             if(current.x != -1){
-                                test[current.x][current.y]->setIsSelected(false);
+                                if(test[current.x][current.y]->isValid()){
+                                    test[current.x][current.y]->setState(Case::Valid);
+                                }
+                                else{
+                                    test[current.x][current.y]->setState(Case::Invalid);
+                                }
+                                // test[current.x][current.y]->setState(Case::Default);
                             }
                             current = getCurrentCase(test, tmp);
                             if(current.x != -1){
-                                test[current.x][current.y]->setIsSelected(true);
+                                test[current.x][current.y]->setState(Case::Selected);
                             }
                             }
                             std::cout << current.x << std::endl;
@@ -99,19 +110,16 @@ int main(int argc, char* argv[]){
                     switch(event.key.keysym.sym){
                         case SDLK_r:
                             if(current.x != -1){
-                                test[current.x][current.y]->setIsSelected(false);
+                                test[current.x][current.y]->setState(Case::Default);
                             }
                             current.x = -1;
-                            grille = generatePlayableGrid(38);
+                            grid = generatePlayableGrid(38);
+                            grille = grid.first;
                             refreshGraphicGrid(test, grille);
+                            compareGrids(test, grille, grid.second);
                             break;
                         case SDLK_v:
-                            if(verifyGrid(grille)){
-                                std::cout << "Grille Valide" << std::endl; 
-                            }
-                            else{
-                                std::cout << "Grille Invalide" << std::endl;
-                            }
+                            compareGrids(test, grille, grid.second);
                             break;
                         default:
                             break;
@@ -218,5 +226,33 @@ void destroyGraphicGrid(GraphicGrid &graphicGrid){
             delete graphicGrid[i][j];
             graphicGrid[i][j] = 0;
         }
+    }
+}
+
+void compareGrids(const GraphicGrid &graphicGrid, const Grid &game, const Grid &solution){
+    bool isValid(true);
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            if(game[i][j] != 0 && !graphicGrid[i][j]->isLocked()){
+                if(game[i][j] == solution[i][j]){
+                    //set color green
+                    graphicGrid[i][j]->setState(Case::Valid);
+                }
+                else{
+                    //set color red
+                    graphicGrid[i][j]->setState(Case::Invalid);
+                    isValid = false;
+                }
+            }
+            else{
+                graphicGrid[i][j]->setState(Case::Default);
+            }
+        }
+    }
+    if(isValid){
+        std::cout << "Grille valide" << std::endl;
+    }
+    else{
+        std::cout << "Grille invalide" << std::endl;
     }
 }

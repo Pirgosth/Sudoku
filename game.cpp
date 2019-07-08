@@ -152,11 +152,15 @@ float averageGridNodeCount(const int n){
 
 SDL_Texture* Case::g_texture_default(0);
 SDL_Texture* Case::g_texture_selected(0);
+SDL_Texture* Case::g_texture_valid(0);
+SDL_Texture* Case::g_texture_invalid(0);
 Font* Case::g_font(0);
 
 void Case::loadTexture(const SpriteManager &manager){
     g_texture_default = _load_texture_from_file(manager.getContext().renderer, "./sources/default.png");
     g_texture_selected = _load_texture_from_file(manager.getContext().renderer, "./sources/selected.png");
+    g_texture_valid = _load_texture_from_file(manager.getContext().renderer, "./sources/valid.png");
+    g_texture_invalid = _load_texture_from_file(manager.getContext().renderer, "./sources/invalid.png");
     g_font = new Font("/usr/share/fonts/TTF/DejaVuSans.ttf");
 }
 
@@ -212,13 +216,31 @@ Case::~Case(){
     delete m_sprite;
 }
 
-void Case::setIsSelected(bool isSelected){
-    if(isSelected){
-        m_sprite->setTexture(g_texture_selected);
+bool Case::isValid(){
+    return m_isValid;
+}
+
+void Case::setState(const State &state){
+    switch(state){
+        case Default:
+            m_sprite->setTexture(g_texture_default);
+            break;
+        case Selected:
+            m_sprite->setTexture(g_texture_selected);
+            break;
+        case Valid:
+            m_sprite->setTexture(g_texture_valid);
+            m_isValid = true;
+            break;
+        case Invalid:
+            m_sprite->setTexture(g_texture_invalid);
+            m_isValid = false;
+            break;
+        default:
+            m_sprite->setTexture(g_texture_default);
+            break;
     }
-    else{
-        m_sprite->setTexture(g_texture_default);
-    }
+    m_state = state;
 }
 
 bool verifyLine(const Grid &grid, int i){
@@ -384,8 +406,14 @@ bool isGridSolvent(const Grid &grid){
     return true;
 }
 
-Grid generatePlayableGrid(int n){
-    Grid grid(generateValidGrid(81));
+std::pair<Grid, Grid> generatePlayableGrid(int n){
+    Grid solution(generateValidGrid(81));
+    Grid grid;
+    for(int i(0); i<9; i++){
+        for(int j(0); j<9; j++){
+            grid[i][j] = solution[i][j];
+        }
+    }
     std::random_device rd;
     std::mt19937 gen(rd());
     std::vector<int> indexs;
@@ -409,7 +437,7 @@ Grid generatePlayableGrid(int n){
         indexs.erase(indexs.begin()+ri);
     }
     std::cout << n << " values have not been removed from grid" << std::endl;
-    return grid;
+    return std::pair<Grid, Grid>(grid, solution);
 }
 
 template<int N>

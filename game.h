@@ -2,7 +2,7 @@
 #define GAME_H_INCLUDED
 
 #define CASE_LENGTH 50
-#define CASE_SPACE 5
+#define CASE_SPACE 6
 
 #include <Stone/Stone.h>
 
@@ -19,14 +19,25 @@ Grid generateValidGrid(int n, int *nodeCount = 0);
 float averageGridNodeCount(const int n);
 
 class Case{
+public:
+    enum State{
+        Default,
+        Selected,
+        Valid,
+        Invalid
+    };typedef enum State State;
 private:
     Sprite *m_sprite = 0;
     TextSprite *m_texte = 0;
     static SDL_Texture* g_texture_default;
     static SDL_Texture* g_texture_selected;
+    static SDL_Texture* g_texture_valid;
+    static SDL_Texture* g_texture_invalid;
     static Font *g_font;
     int m_value = 0;
     bool m_isLocked = false;
+    bool m_isValid = true;
+    State m_state = Default;
 public:
     Case(Pos pos, int i);
     void draw();
@@ -38,7 +49,8 @@ public:
     void lock();
     void unlock();
     bool isLocked();
-    void setIsSelected(bool isSelected);
+    bool isValid();
+    void setState(const State &state);
 };
 
 bool verifyLine(const Grid &grid, int i);
@@ -52,7 +64,7 @@ std::array<int, 9> getSquareValues(const Grid &grid, int n);
 
 std::vector<int> getCaseValues(const Grid &grid, int i, int j);
 bool isGridSolvent(const Grid &grid);
-Grid generatePlayableGrid(int n);
+std::pair<Grid, Grid> generatePlayableGrid(int n);
 
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
 
