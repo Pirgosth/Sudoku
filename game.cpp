@@ -28,7 +28,7 @@ void printGrid(const Grid &grid){
     }
 }
 
-Grid generateValidGrid(int n, int *nodeCount){
+Grid generateValidGrid(int n, int seed, int *nodeCount){
 
     Grid grid(createEmptyGrid());
 
@@ -42,8 +42,7 @@ Grid generateValidGrid(int n, int *nodeCount){
 
     Branch<9>* currentNode(&tree);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    boost::random::mt19937 gen(seed);
 
     int nodesReached(0);
 
@@ -74,8 +73,9 @@ Grid generateValidGrid(int n, int *nodeCount){
             }
 
             //Create uniform distribution to get random value from validValues
-            std::uniform_int_distribution<> dis(0, validValues.size()-1);
-            int rv(dis(gen));
+            boost::random::uniform_int_distribution<> dis(0, validValues.size()-1);
+			boost::random::variate_generator<boost::random::mt19937, boost::random::uniform_int_distribution<>> vg(gen, dis);
+            int rv(vg());
             grid[k/9][k%9] = validValues[rv].first;
 
             //We decrease the value selected
@@ -122,6 +122,7 @@ Grid generateValidGrid(int n, int *nodeCount){
     if(nodeCount != 0)
       *nodeCount = nodesReached;
     // std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
+	//printGrid(grid);
     return grid;
 }
 
@@ -131,7 +132,7 @@ float averageGridNodeCount(const int n){
     int currentNodeCount(0);
     int timeout = SDL_GetTicks();
     for(int i(0); i<n; i++){
-        generateValidGrid(81, &currentNodeCount);
+        generateValidGrid(81, 0, &currentNodeCount);
         // std::cout << currentNodeCount << std::endl;
         values.push_back(currentNodeCount);
         totalNodeCount+=currentNodeCount;
@@ -161,7 +162,7 @@ void Case::loadTexture(const SpriteManager &manager){
     g_texture_selected = _load_texture_from_file(manager.getContext().renderer, "./sources/selected.png");
     g_texture_valid = _load_texture_from_file(manager.getContext().renderer, "./sources/valid.png");
     g_texture_invalid = _load_texture_from_file(manager.getContext().renderer, "./sources/invalid.png");
-    g_font = new Font("/usr/share/fonts/TTF/DejaVuSans.ttf");
+    g_font = new Font("./sources/DejaVuSans.ttf");
 }
 
 void Case::destroyTexture(){
@@ -406,23 +407,24 @@ bool isGridSolvent(const Grid &grid){
     return true;
 }
 
-std::pair<Grid, Grid> generatePlayableGrid(int n){
-    Grid solution(generateValidGrid(81));
+std::pair<Grid, Grid> generatePlayableGrid(int n, int seed){
+    Grid solution(generateValidGrid(81, seed));
     Grid grid;
     for(int i(0); i<9; i++){
         for(int j(0); j<9; j++){
             grid[i][j] = solution[i][j];
         }
     }
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::vector<int> indexs;
     for(int i(0); i<81; i++){
         indexs.push_back(i+1);
     }
+	boost::random_device rd;
     while(n != 0 && indexs.size() != 0){
-        std::uniform_int_distribution<> dis(0, indexs.size()-1);
-        int ri(dis(gen));
+		boost::random::mt19937 gen(rd());
+        boost::random::uniform_int_distribution<> dis(0, indexs.size()-1);
+		boost::random::variate_generator<boost::random::mt19937, boost::random::uniform_int_distribution<>> vg(gen, dis);
+        int ri(vg());
         int index(indexs[ri]);
         int tmpValue = grid[index/9][index%9];
         grid[index/9][index%9] = 0;
@@ -437,6 +439,7 @@ std::pair<Grid, Grid> generatePlayableGrid(int n){
         indexs.erase(indexs.begin()+ri);
     }
     std::cout << n << " values have not been removed from grid" << std::endl;
+	//printGrid(grid);
     return std::pair<Grid, Grid>(grid, solution);
 }
 

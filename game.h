@@ -6,7 +6,8 @@
 
 #include <Stone/Stone.h>
 
-#include <random>
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
 #include <iostream>
 #include <vector>
 #include <array>
@@ -15,7 +16,7 @@ typedef std::array<std::array<int, 9>, 9> Grid;
 
 Grid createEmptyGrid();
 void printGrid(const Grid &grid);
-Grid generateValidGrid(int n, int *nodeCount = 0);
+Grid generateValidGrid(int n, int seed = 0, int *nodeCount = 0);
 float averageGridNodeCount(const int n);
 
 class Case{
@@ -64,7 +65,7 @@ std::array<int, 9> getSquareValues(const Grid &grid, int n);
 
 std::vector<int> getCaseValues(const Grid &grid, int i, int j);
 bool isGridSolvent(const Grid &grid);
-std::pair<Grid, Grid> generatePlayableGrid(int n);
+std::pair<Grid, Grid> generatePlayableGrid(int n, int seed = 0);
 
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
 

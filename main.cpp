@@ -1,5 +1,8 @@
 #include <iostream>
 
+#include <boost/random.hpp>
+#include <boost/random/random_device.hpp>
+
 #include <Stone/Stone.h>
 
 #include "game.h"
@@ -15,6 +18,7 @@ void destroyGraphicGrid(GraphicGrid &graphicGrid);
 void compareGrids(const GraphicGrid &graphicGrid, const Grid &game, const Grid &solution);
 
 int main(int argc, char* argv[]){
+	boost::random_device rd;
     SDL_Init(SDL_INIT_VIDEO);
     Font::Init();
     SDL_Window *window(0);
@@ -34,7 +38,7 @@ int main(int argc, char* argv[]){
 
     // std::cout << "Nodes encountered average: " << nodeAverage << std::endl;
 
-    std::pair<Grid, Grid> grid(generatePlayableGrid(38));
+    std::pair<Grid, Grid> grid(generatePlayableGrid(38, rd()));
     Grid grille(grid.first);
 
     // for(int i(0); i<9; i++){
@@ -113,10 +117,11 @@ int main(int argc, char* argv[]){
                                 test[current.x][current.y]->setState(Case::Default);
                             }
                             current.x = -1;
-                            grid = generatePlayableGrid(38);
+                            grid = generatePlayableGrid(38, rd());
                             grille = grid.first;
                             refreshGraphicGrid(test, grille);
-                            compareGrids(test, grille, grid.second);
+							printGrid(grille);
+                            //compareGrids(test, grille, grid.second);
                             break;
                         case SDLK_v:
                             compareGrids(test, grille, grid.second);
