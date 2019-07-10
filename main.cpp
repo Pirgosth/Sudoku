@@ -87,13 +87,17 @@ int main(int argc, char* argv[]){
                             {Pos tmp;
                             SDL_GetMouseState(&tmp.x, &tmp.y);
                             if(current.x != -1){
-                                if(test[current.x][current.y]->isValid()){
-                                    test[current.x][current.y]->setState(Case::Valid);
-                                }
-                                else{
-                                    test[current.x][current.y]->setState(Case::Invalid);
-                                }
-                                // test[current.x][current.y]->setState(Case::Default);
+								if (grille[current.x][current.y] != 0) {
+									if (test[current.x][current.y]->isValid()) {
+										test[current.x][current.y]->setState(Case::Valid);
+									}
+									else {
+										test[current.x][current.y]->setState(Case::Invalid);
+									}
+								}
+								else {
+									test[current.x][current.y]->setState(Case::Default);
+								}
                             }
                             current = getCurrentCase(test, tmp);
                             if(current.x != -1){
@@ -177,8 +181,8 @@ Pos getCurrentCase(const GraphicGrid &grid, const Pos &pos){
 }
 
 bool isNumberKey(int key){
-    std::array<int, 10> numberKeys = {{SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9}};
-    for(int i(0); i<10; i++){
+    std::array<int, 20> numberKeys = {{SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9, SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9}};
+    for(int i(0); i<20; i++){
         if(key == numberKeys[i]){
             return true;
         }
@@ -187,11 +191,11 @@ bool isNumberKey(int key){
 }
 
 void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Pos &current, int key){
-    std::array<int, 10> numberKeys = {{SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9}};
+    std::array<int, 20> numberKeys = { {SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9, SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9} };
     int index(-1);
-    for(int i(0); i<10; i++){
+    for(int i(0); i<20; i++){
         if(key == numberKeys[i]){
-            index = i;
+            index = i%10;
         }
     }
     if(current.x != -1){
