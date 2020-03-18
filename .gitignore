@@ -1,1 +1,5 @@
-sudoku
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Sudoku
+Makefile
