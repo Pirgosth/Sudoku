@@ -1,0 +1,9 @@
+#include <random>
+
+static std::mt19937 *mt = nullptr;
+
+void initRand();
+
+void destroyRand();
+
+int randRange(int a, int b);
