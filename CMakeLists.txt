@@ -1,7 +1,6 @@
 project(Sudoku)
 
-include_directories(C:/boost/include/boost-1_70)
-link_directories(C:/boost/lib)
+#set (CMAKE_CXX_STANDARD 11)
 
-add_executable(Sudoku WIN32 main.cpp game.h game.cpp)
-target_link_libraries(Sudoku mingw32 SDL2main SDL2 boost_random-mgw81-mt-x64-1_70 sprite)
+add_executable(Sudoku main.cpp game.h game.cpp random.h random.cpp)
+target_link_libraries(Sudoku SDL2 SDL2_image SDL2_ttf Sprite)
