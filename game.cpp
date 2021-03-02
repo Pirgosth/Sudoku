@@ -1,58 +1,74 @@
-#include "game.h"
+#include "game.hpp"
 
-Grid createEmptyGrid(){
+Grid createEmptyGrid()
+{
   return Grid();
 }
 
-void printGrid(const Grid &grid){
+void printGrid(const Grid &grid)
+{
   std::cout << "[";
-  for(int i(0); i<9; i++){
-    if(i != 0){
+  for (int i(0); i < 9; i++)
+  {
+    if (i != 0)
+    {
       std::cout << " ";
     }
     std::cout << "[";
-    for(int j(0); j<9; j++){
-      if(j == 8){
-	std::cout << grid[i][j] << "]";
+    for (int j(0); j < 9; j++)
+    {
+      if (j == 8)
+      {
+        std::cout << grid[i][j] << "]";
       }
-      else{
-	std::cout << grid[i][j] << ",";
+      else
+      {
+        std::cout << grid[i][j] << ",";
       }
     }
-    if(i == 8){
-      std::cout <<  "]" << std::endl;
+    if (i == 8)
+    {
+      std::cout << "]" << std::endl;
     }
-    else{
+    else
+    {
       std::cout << ",\n";
     }
   }
 }
 
-Grid generateValidGrid(int n, int *nodeCount){
+Grid generateValidGrid(int n, int *nodeCount)
+{
 
   Grid grid(createEmptyGrid());
 
-  Branch<9> tree(true, 1);
-  for(int i(0); i<9; i++){
-    tree.addNode(new Branch<9>(true, 9), i);
+  PossibilityNode<9> rootNode(true, 1);
+  for (int i(0); i < 9; i++)
+  {
+    rootNode[i] = new PossibilityNode<9>(true, 9);
   }
 
-  std::vector<Branch<9>*> nodesHistory;
+  std::vector<PossibilityNode<9> *> nodesHistory;
   std::vector<int> valuesHistory;
 
-  Branch<9>* currentNode(&tree);
+  PossibilityNode<9> *currentNode(&rootNode);
 
   int nodesReached(0);
 
-  for(int k(0); k<n; k++){
+  for (int k(0); k < n; k++)
+  {
     //Generate vector of validValues for the k-th element
     std::vector<std::pair<int, int>> validValues;
-    if(currentNode!=0){
-      for(int i(0); i<9; i++){
-	if((*currentNode)[i] != 0 && (*currentNode)[i]->isValid()){
-	  validValues.push_back(std::pair<int, int>(i+1, (*currentNode)[i]->getCount()));
-	  // std::cout << "(" << i+1 << "," << (*currentNode)[i]->getCount() << ")" << std::endl;
-	}
+    if (currentNode != 0)
+    {
+      for (int i(0); i < 9; i++)
+      {
+        if ((*currentNode)[i] != __null && (*currentNode)[i]->isValid())
+
+        {
+          validValues.push_back(std::pair<int, int>(i + 1, (*currentNode)[i]->getCount()));
+          // std::cout << "(" << i+1 << "," << (*currentNode)[i]->getCount() << ")" << std::endl;
+        }
       }
     }
 
@@ -61,28 +77,31 @@ Grid generateValidGrid(int n, int *nodeCount){
     int currentValue(-1);
     bool isNodeValid(true);
 
-    do{
+    do
+    {
       nodesReached++;
       //If there is no more validValues, node is invalid
-      if(validValues.size() == 0){
-	isNodeValid = false;
-	// std::cout << "No more validValues in list, abort current Node" << std::endl;
-	break;
+      if (validValues.size() == 0)
+      {
+        isNodeValid = false;
+        // std::cout << "No more validValues in list, abort current Node" << std::endl;
+        break;
       }
 
       //Create uniform distribution to get random value from validValues
-      int rv(randRange(0, validValues.size()-1));
-      grid[k/9][k%9] = validValues[rv].first;
+      int rv(randRange(0, validValues.size() - 1));
+      grid[k / 9][k % 9] = validValues[rv].first;
 
       //We decrease the value selected
       validValues[rv].second--;
 
       //If there's no more count of a value, we remove it from the list of validValues
-      if(validValues[rv].second <= 0){
-	validValues.erase(validValues.begin()+rv);
+      if (validValues[rv].second <= 0)
+      {
+        validValues.erase(validValues.begin() + rv);
       }
 
-    }while(!(verifyLine(grid, k/9) && verifyColumn(grid, k%9) && verifySquare(grid, (int)((k/9)/3)*3+((k%9)/3))));
+    } while (!(verifyLine(grid, k / 9) && verifyColumn(grid, k % 9) && verifySquare(grid, (int)((k / 9) / 3) * 3 + ((k % 9) / 3))));
     // printGrid(grid);
     // getLineValues(grid, k/9);
     // getColumnValues(grid, k%9);
@@ -90,70 +109,77 @@ Grid generateValidGrid(int n, int *nodeCount){
     // std::cout << "Carre: " << (int)((k/9)/3)*3+((k%9)/3) << "\tligne: " << k/9 << "\tcolonne: " << k%9 << std::endl;
     // std::system("read");
     // }while(!verifyGrid(grid));
-    if(!isNodeValid){
+    if (!isNodeValid)
+    {
       // printGrid(grid);
       currentNode->setValidity(false);
-      currentNode = nodesHistory[nodesHistory.size()-1];
+      currentNode = nodesHistory[nodesHistory.size() - 1];
       nodesHistory.pop_back();
       valuesHistory.pop_back();
-      grid[k/9][k%9] = 0;
-      k-=2;
+      grid[k / 9][k % 9] = 0;
+      k -= 2;
       continue;
     }
-    if(k < 80){
-      currentValue = grid[k/9][k%9];
-      std::array<int, 9> lv(getLineValues(grid, (k+1)/9)), cv(getColumnValues(grid, (k+1)%9)), sv(getSquareValues(grid, (int)(((k+1)/9)/3)*3+(((k+1)%9)/3)));
+    if (k < 80)
+    {
+      currentValue = grid[k / 9][k % 9];
+      std::array<int, 9> lv(getLineValues(grid, (k + 1) / 9)), cv(getColumnValues(grid, (k + 1) % 9)), sv(getSquareValues(grid, (int)(((k + 1) / 9) / 3) * 3 + (((k + 1) % 9) / 3)));
 
-      for(int i(0); i<9; i++){
-	bool validity(true);
-	validity = lv[i] == 1 && cv[i] == 1 && sv[i] == 1;
-	(*currentNode)[currentValue-1]->addNode(new Branch<9>(validity, i == currentValue-1 ? (*currentNode)[i]->getCount()-1: (*currentNode)[i]->getCount()), i);
+      for (int i(0); i < 9; i++)
+      {
+        bool validity(true);
+        validity = lv[i] == 1 && cv[i] == 1 && sv[i] == 1;
+        (*(*currentNode)[currentValue - 1])[i] = new PossibilityNode<9>(validity, i == currentValue - 1 ? (*currentNode)[i]->getCount() - 1 : (*currentNode)[i]->getCount());
       }
 
       valuesHistory.push_back(currentValue);
       nodesHistory.push_back(currentNode);
-      currentNode = (*currentNode)[currentValue-1];
+      currentNode = (*currentNode)[currentValue - 1];
     }
   }
-  if(nodeCount != 0)
+  if (nodeCount != 0)
     *nodeCount = nodesReached;
   // std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
   //printGrid(grid);
   return grid;
 }
 
-float averageGridNodeCount(const int n){
+float averageGridNodeCount(const int n)
+{
   std::vector<int> values;
   float totalNodeCount(0);
   int currentNodeCount(0);
   int timeout = SDL_GetTicks();
-  for(int i(0); i<n; i++){
+  for (int i(0); i < n; i++)
+  {
     generateValidGrid(81, &currentNodeCount);
     // std::cout << currentNodeCount << std::endl;
     values.push_back(currentNodeCount);
-    totalNodeCount+=currentNodeCount;
+    totalNodeCount += currentNodeCount;
   }
-  float average(totalNodeCount/n);
+  float average(totalNodeCount / n);
   float sigma(0);
-  for(int i(0); i<(int)values.size(); i++){
-    sigma += std::pow(values[i]-average, 2);
+  for (int i(0); i < (int)values.size(); i++)
+  {
+    sigma += std::pow(values[i] - average, 2);
   }
   sigma /= n;
   sigma = std::sqrt(sigma);
-  float confiance = 2*sigma/(std::sqrt(n));
-  float xmin(average-confiance), xmax(average+confiance);
-  std::cout << "Simulation took: " << (SDL_GetTicks()-timeout)/1000.0 <<  " seconds" << std::endl;
+  float confiance = 2 * sigma / (std::sqrt(n));
+  float xmin(average - confiance), xmax(average + confiance);
+  std::cout << "Simulation took: " << (SDL_GetTicks() - timeout) / 1000.0 << " seconds" << std::endl;
   std::cout << "Confidence interval: [" << xmin << ";" << xmax << "]" << std::endl;
   return average;
 }
 
-SDL_Texture* Case::g_texture_default(0);
-SDL_Texture* Case::g_texture_selected(0);
-SDL_Texture* Case::g_texture_valid(0);
-SDL_Texture* Case::g_texture_invalid(0);
-Font* Case::g_font(0);
+SDL_Texture *Case::g_texture_default(0);
+SDL_Texture *Case::g_texture_selected(0);
+SDL_Texture *Case::g_texture_valid(0);
+SDL_Texture *Case::g_texture_invalid(0);
+Font *Case::g_font(0);
 
-void Case::loadTexture(const SpriteManager &manager){
+void Case::loadTexture(const SpriteManager &manager)
+{
   g_texture_default = _load_texture_from_file(manager.getContext().renderer, "./sources/default.png");
   g_texture_selected = _load_texture_from_file(manager.getContext().renderer, "./sources/selected.png");
   g_texture_valid = _load_texture_from_file(manager.getContext().renderer, "./sources/valid.png");
@@ -161,64 +187,79 @@ void Case::loadTexture(const SpriteManager &manager){
   g_font = new Font("./sources/DejaVuSans.ttf");
 }
 
-void Case::destroyTexture(){
+void Case::destroyTexture()
+{
   delete g_font;
   SDL_DestroyTexture(g_texture_selected);
   SDL_DestroyTexture(g_texture_default);
 }
 
-Case::Case(Pos pos, int i){
+Case::Case(Pos pos, int i)
+{
   m_sprite = new Sprite(g_texture_default, pos, {CASE_LENGTH, CASE_LENGTH});
-  m_texte = new TextSprite("a", pos, {}, *g_font, {255, 255, 255, 255}, 30, {0, 0, 0, 0});
-  m_texte->pos({m_sprite->pos().x+(m_sprite->size().w-m_texte->size().w)/2, m_sprite->pos().y +(m_sprite->size().h-m_texte->size().h)/2});
+  m_texte = new TextSprite("a", pos, *g_font, {255, 255, 255, 255}, 30, {0, 0, 0, 0});
+  m_texte->pos({m_sprite->pos().x + (m_sprite->size().w - m_texte->size().w) / 2, m_sprite->pos().y + (m_sprite->size().h - m_texte->size().h) / 2});
   setValue(i);
 }
 
-void Case::draw(){
+void Case::draw()
+{
   m_sprite->draw();
-  if(m_texte->isEnabled()){
+  if (m_texte->isEnabled())
+  {
     m_texte->draw();
   }
 }
 
-int Case::getValue(){
+int Case::getValue()
+{
   return m_value;
 }
 
-void Case::setValue(int value){
-  if(value == 0){
+void Case::setValue(int value)
+{
+  if (value == 0)
+  {
     m_texte->disable();
   }
-  else{
+  else
+  {
     m_texte->enable();
   }
   m_value = value;
   m_texte->setText(std::to_string(m_value));
 }
 
-void Case::lock(){
+void Case::lock()
+{
   m_isLocked = true;
 }
 
-void Case::unlock(){
+void Case::unlock()
+{
   m_isLocked = false;
 }
 
-bool Case::isLocked(){
+bool Case::isLocked()
+{
   return m_isLocked;
 }
 
-Case::~Case(){
+Case::~Case()
+{
   delete m_texte;
   delete m_sprite;
 }
 
-bool Case::isValid(){
+bool Case::isValid()
+{
   return m_isValid;
 }
 
-void Case::setState(const State &state){
-  switch(state){
+void Case::setState(const State &state)
+{
+  switch (state)
+  {
   case Default:
     m_sprite->setTexture(g_texture_default);
     break;
@@ -240,79 +281,102 @@ void Case::setState(const State &state){
   m_state = state;
 }
 
-bool verifyLine(const Grid &grid, int i){
+bool verifyLine(const Grid &grid, int i)
+{
   std::array<int, 9> count;
-  for(int j(0); j<9; j++){
+  for (int j(0); j < 9; j++)
+  {
     count[j] = 0;
   }
-  for(int j(0); j<9; j++){
-    if(grid[i][j] != 0){
-      count[grid[i][j]-1] += 1;
-      if(count[grid[i][j]-1] > 1){
-	return false;
+  for (int j(0); j < 9; j++)
+  {
+    if (grid[i][j] != 0)
+    {
+      count[grid[i][j] - 1] += 1;
+      if (count[grid[i][j] - 1] > 1)
+      {
+        return false;
       }
     }
   }
   return true;
 }
 
-bool verifyColumn(const Grid &grid, int j){
+bool verifyColumn(const Grid &grid, int j)
+{
   std::array<int, 9> count;
-  for(int i(0); i<9; i++){
+  for (int i(0); i < 9; i++)
+  {
     count[i] = 0;
   }
-  for(int i(0); i<9; i++){
-    if(grid[i][j] != 0){
-      count[grid[i][j]-1] += 1;
-      if(count[grid[i][j]-1] > 1){
-	return false;
+  for (int i(0); i < 9; i++)
+  {
+    if (grid[i][j] != 0)
+    {
+      count[grid[i][j] - 1] += 1;
+      if (count[grid[i][j] - 1] > 1)
+      {
+        return false;
       }
     }
   }
   return true;
 }
 
-bool verifySquare(const Grid &grid, int n){
+bool verifySquare(const Grid &grid, int n)
+{
   // std::cout << "n = " << n << std::endl;
   std::array<int, 9> count;
-  for(int i(0); i<9; i++){
+  for (int i(0); i < 9; i++)
+  {
     count[i] = 0;
   }
 
-  for(int i(0); i<3; i++){
-    for(int j(0); j<3; j++){
-      int p((int)(n/3)*3+i), q((n%3)*3+j);
+  for (int i(0); i < 3; i++)
+  {
+    for (int j(0); j < 3; j++)
+    {
+      int p((int)(n / 3) * 3 + i), q((n % 3) * 3 + j);
       // std::cout << "(" << p << "," << q << "): " << grid[p][q] << ",";
-      if(grid[p][q] != 0){
-	count[grid[p][q]-1] += 1;
-	if(count[grid[p][q]-1]> 1){
-	  // std::cout << std::endl;
-	  return false;
-	}
+      if (grid[p][q] != 0)
+      {
+        count[grid[p][q] - 1] += 1;
+        if (count[grid[p][q] - 1] > 1)
+        {
+          // std::cout << std::endl;
+          return false;
+        }
       }
     }
   }
-  // std::cout << std::endl;    
+  // std::cout << std::endl;
   return true;
 }
 
-bool verifyGrid(const Grid &grid){
-  for(int k(0); k<9; k++){
-    if(!(verifyLine(grid, k) && verifyColumn(grid, k) && verifySquare(grid, k))){
+bool verifyGrid(const Grid &grid)
+{
+  for (int k(0); k < 9; k++)
+  {
+    if (!(verifyLine(grid, k) && verifyColumn(grid, k) && verifySquare(grid, k)))
+    {
       return false;
     }
   }
   return true;
 }
 
-std::array<int, 9> getLineValues(const Grid &grid, int i){
+std::array<int, 9> getLineValues(const Grid &grid, int i)
+{
   std::array<int, 9> values;
-  for(int j(0); j<9; j++){
+  for (int j(0); j < 9; j++)
+  {
     values[j] = 1;
   }
-  for(int j(0); j<9; j++){
-    if(grid[i][j] != 0){
-      values[grid[i][j]-1] = 0;
+  for (int j(0); j < 9; j++)
+  {
+    if (grid[i][j] != 0)
+    {
+      values[grid[i][j] - 1] = 0;
     }
   }
   // for(int j(0); j<9; j++){
@@ -322,14 +386,18 @@ std::array<int, 9> getLineValues(const Grid &grid, int i){
   return values;
 }
 
-std::array<int, 9> getColumnValues(const Grid &grid, int j){
+std::array<int, 9> getColumnValues(const Grid &grid, int j)
+{
   std::array<int, 9> values;
-  for(int i(0); i<9; i++){
+  for (int i(0); i < 9; i++)
+  {
     values[i] = 1;
   }
-  for(int i(0); i<9; i++){
-    if(grid[i][j] != 0){
-      values[grid[i][j]-1] = 0;
+  for (int i(0); i < 9; i++)
+  {
+    if (grid[i][j] != 0)
+    {
+      values[grid[i][j] - 1] = 0;
     }
   }
   // for(int i(0); i<9; i++){
@@ -339,16 +407,21 @@ std::array<int, 9> getColumnValues(const Grid &grid, int j){
   return values;
 }
 
-std::array<int, 9> getSquareValues(const Grid &grid, int n){
+std::array<int, 9> getSquareValues(const Grid &grid, int n)
+{
   std::array<int, 9> values;
-  for(int j(0); j<9; j++){
+  for (int j(0); j < 9; j++)
+  {
     values[j] = 1;
   }
-  for(int i(0); i<3; i++){
-    for(int j(0); j<3; j++){
-      int p((int)(n/3)*3+i), q((n%3)*3+j);
-      if(grid[p][q] != 0){
-	values[grid[p][q]-1] = 0;
+  for (int i(0); i < 3; i++)
+  {
+    for (int j(0); j < 3; j++)
+    {
+      int p((int)(n / 3) * 3 + i), q((n % 3) * 3 + j);
+      if (grid[p][q] != 0)
+      {
+        values[grid[p][q] - 1] = 0;
       }
     }
   }
@@ -359,127 +432,99 @@ std::array<int, 9> getSquareValues(const Grid &grid, int n){
   return values;
 }
 
-std::vector<int> getCaseValues(const Grid &grid, int i, int j){
-  auto lv(getLineValues(grid, i)), cv(getColumnValues(grid, j)), sv(getSquareValues(grid, (int)(i/3)*3+(j/3)));
+std::vector<int> getCaseValues(const Grid &grid, int i, int j)
+{
+  auto lv(getLineValues(grid, i)), cv(getColumnValues(grid, j)), sv(getSquareValues(grid, (int)(i / 3) * 3 + (j / 3)));
   std::vector<int> values;
-  for(int k(0); k<9; k++){
-    if(lv[k] && cv[k] && sv[k]){
-      values.push_back(k+1);
+  for (int k(0); k < 9; k++)
+  {
+    if (lv[k] && cv[k] && sv[k])
+    {
+      values.push_back(k + 1);
     }
   }
   return values;
 }
 
-bool isGridSolvent(const Grid &grid){
+bool isGridSolvent(const Grid &grid)
+{
   Grid tmpGrid;
-  for(int i(0); i<9; i++){
-    for(int j(0); j<9; j++){
+  for (int i(0); i < 9; i++)
+  {
+    for (int j(0); j < 9; j++)
+    {
       tmpGrid[i][j] = grid[i][j];
     }
   }
   // printGrid(tmpGrid);
   bool hasChanged(true);
-  while(hasChanged){
+  while (hasChanged)
+  {
     hasChanged = false;
-    for(int i(0); i<9; i++){
-      for(int j(0); j<9; j++){
-	auto values = getCaseValues(tmpGrid, i, j);
-	if(values.size() == 1 && tmpGrid[i][j] == 0){
-	  tmpGrid[i][j] = values[0];
-	  hasChanged = true;
-	}
+    for (int i(0); i < 9; i++)
+    {
+      for (int j(0); j < 9; j++)
+      {
+        auto values = getCaseValues(tmpGrid, i, j);
+        if (values.size() == 1 && tmpGrid[i][j] == 0)
+        {
+          tmpGrid[i][j] = values[0];
+          hasChanged = true;
+        }
       }
     }
     // printGrid(tmpGrid);
     // std::system("read");
   }
-  for(int i(0); i<9; i++){
-    for(int j(0); j<9; j++){
-      if(tmpGrid[i][j] == 0){
-	return false;
+  for (int i(0); i < 9; i++)
+  {
+    for (int j(0); j < 9; j++)
+    {
+      if (tmpGrid[i][j] == 0)
+      {
+        return false;
       }
     }
   }
   return true;
 }
 
-std::pair<Grid, Grid> generatePlayableGrid(int n, int seed){
+std::pair<Grid, Grid> generatePlayableGrid(int n, int seed)
+{
   Grid solution(generateValidGrid(81));
   printGrid(solution);
   Grid grid;
-  for(int i(0); i<9; i++){
-    for(int j(0); j<9; j++){
+  for (int i(0); i < 9; i++)
+  {
+    for (int j(0); j < 9; j++)
+    {
       grid[i][j] = solution[i][j];
     }
   }
   std::vector<int> indexs;
-  for(int i(0); i<81; i++){
-    indexs.push_back(i+1);
+  for (int i(0); i < 81; i++)
+  {
+    indexs.push_back(i + 1);
   }
-  while(n != 0 && indexs.size() != 0){
-    int ri(randRange(0, indexs.size()-1));
+  while (n != 0 && indexs.size() != 0)
+  {
+    int ri(randRange(0, indexs.size() - 1));
     int index(indexs[ri]);
-    int tmpValue = grid[index/9][index%9];
-    grid[index/9][index%9] = 0;
+    int tmpValue = grid[index / 9][index % 9];
+    grid[index / 9][index % 9] = 0;
     // printGrid(grid);
-    if(!isGridSolvent(grid)){
-      grid[index/9][index%9] = tmpValue;
+    if (!isGridSolvent(grid))
+    {
+      grid[index / 9][index % 9] = tmpValue;
     }
-    else{
+    else
+    {
       // std::cout << "Value removed !" << std::endl;
       n--;
     }
-    indexs.erase(indexs.begin()+ri);
+    indexs.erase(indexs.begin() + ri);
   }
   //std::cout << n << " values have not been removed from grid" << std::endl;
   //printGrid(grid);
   return std::pair<Grid, Grid>(grid, solution);
-}
-
-template<int N>
-Branch<N>::Branch(bool isValid, int count){
-  for(auto node = m_nodes.begin(); node!=m_nodes.end(); node++){
-    *node = 0;
-  }
-  m_isValid = isValid;
-  m_count = count;
-}
-
-template<int N>
-Branch<N>::~Branch(){
-  for(auto node = m_nodes.begin(); node!=m_nodes.end(); node++){
-    Branch* child = *node;
-    if(child != 0)
-      delete child;
-  }
-}
-
-template<int N>
-void Branch<N>::addNode(Branch *node, int index){
-  m_nodes[index] = node;
-}
-template<int N>
-Branch<N>* Branch<N>::operator[](int index){
-  return m_nodes[index];
-}
-
-template<int N>
-bool Branch<N>::isValid(){
-  return m_isValid;
-}
-
-template<int N>
-void Branch<N>::setValidity(bool validity){
-  m_isValid = validity;
-  // if(!validity){
-  //     for(auto node = m_nodes.begin(); node != m_nodes.end(); node++){
-  //         delete (*node);
-  //         (*node) = 0;
-  //     }
-  // }
-}
-
-template<int N>
-int Branch<N>::getCount(){
-  return m_count;
 }

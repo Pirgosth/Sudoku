@@ -8,9 +8,9 @@
 
 #include <iostream>
 #include <vector>
-#include <array>
 
-#include "random.h"
+#include "possibility_node.hpp"
+#include "random.hpp"
 
 typedef std::array<std::array<int, 9>, 9> Grid;
 
@@ -68,21 +68,5 @@ bool isGridSolvent(const Grid &grid);
 std::pair<Grid, Grid> generatePlayableGrid(int n, int seed = 0);
 
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
-
-template<int N>
-class Branch{
-private:
-  std::array<Branch*, N> m_nodes;
-  bool m_isValid = true;
-  int m_count;
-public:
-  Branch(bool isValid, int count);
-  ~Branch();
-  void addNode(Branch *node, int index);
-  Branch* operator[](int index);
-  bool isValid();
-  void setValidity(bool validity);
-  int getCount();
-};
 
 #endif //GAME_H_INCLUDED

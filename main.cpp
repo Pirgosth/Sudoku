@@ -2,7 +2,7 @@
 
 #include <Stone/Sprite/sprite.h>
 
-#include "game.h"
+#include "game.hpp"
 
 typedef std::array<std::array<Case*, 9>, 9> GraphicGrid;
 
