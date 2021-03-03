@@ -253,32 +253,58 @@ Case::~Case()
 
 bool Case::isValid()
 {
-  return m_isValid;
+  return (this->m_state & Valid) != 0;
+}
+
+bool Case::isVerified()
+{
+  return (this->m_state & Default) != 0;
 }
 
 void Case::setState(const State &state)
 {
-  switch (state)
-  {
-  case Default:
-    m_sprite->setTexture(g_texture_default);
-    break;
-  case Selected:
-    m_sprite->setTexture(g_texture_selected);
-    break;
-  case Valid:
-    m_sprite->setTexture(g_texture_valid);
-    m_isValid = true;
-    break;
-  case Invalid:
-    m_sprite->setTexture(g_texture_invalid);
-    m_isValid = false;
-    break;
-  default:
-    m_sprite->setTexture(g_texture_default);
-    break;
-  }
   m_state = state;
+  if (m_state == Default)
+  {
+    m_sprite->setTexture(g_texture_default);
+  }
+  else
+  {
+    if (this->hasState(Selected))
+    {
+      m_sprite->setTexture(g_texture_selected);
+    }
+    else if (this->hasState(Verified))
+    {
+      if (this->hasState(Valid))
+      {
+        m_sprite->setTexture(g_texture_valid);
+      }
+      else
+      {
+        m_sprite->setTexture(g_texture_invalid);
+      }
+    }
+  }
+}
+
+void Case::addState(const State &state)
+{
+  setState(m_state | state);
+}
+
+void Case::removeState(const State &state)
+{
+  setState(m_state & ~state);
+}
+
+bool Case::hasState(const State &state){
+  return (this->m_state & state) != 0;
+}
+
+const Case::State &Case::getState() const
+{
+  return this->m_state;
 }
 
 bool verifyLine(const Grid &grid, int i)
