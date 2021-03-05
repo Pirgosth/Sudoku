@@ -41,34 +41,9 @@ int main(int argc, char *argv[])
   std::pair<Grid, Grid> grid(generatePlayableGrid(81));
   Grid grille(grid.first);
 
-  // for(int i(0); i<9; i++){
-  //     grille[i][i] = 0;
-  //     grille[9-i][i] = 0;
-  // }
-
-  // std::cout << getCaseValues(grille, 0, 0)[0] << std::endl;
-
-  // std::cout << isGridSolvent(grille) << std::endl;
-
-  std::cout << "Grille generee" << std::endl;
-
-  //printGrid(grille);
-
   GraphicGrid test;
 
   getGraphicGrid(grille, test);
-
-  std::cout << "Cases créées" << std::endl;
-
-  // std::cout << verifyLine(grille, 0) << std::endl;
-  // std::cout << verifyColumn(grille, 0) << std::endl;
-  // for(int i(0); i<9; i++){
-  //     for(int j(0); j<9; j++){
-  //         std::cout << "Carre: " << (int)(i/3)*3+(j/3) << std::endl;
-  //         std::cout << verifySquare(grille, (int)(i/3)*3+(j/3) << std::endl;
-  //     }
-  // }
-  // std::cout << verifyGrid(grille) << std::endl;
 
   Pos current({-1, -1});
 

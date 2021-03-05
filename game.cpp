@@ -115,8 +115,6 @@ Grid generateValidGrid(int *nodeCount)
   }
   if (nodeCount != nullptr)
     *nodeCount = nodesReached;
-  std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
-  //printGrid(grid);
   return grid;
 }
 

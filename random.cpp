@@ -3,6 +3,7 @@
 void initRand(){
   std::random_device rd;
   mt = new std::mt19937(rd());
+  std::srand(time(0));
 }
 
 void destroyRand(){
