@@ -62,7 +62,6 @@ Grid generateValidGrid(int *nodeCount)
       std::vector<int> availableMoves = getCaseValues(grid, k / 9, k % 9);
 
       //Generate possibilities for current node
-      //TODO: Prefilter possibilities by removing impossible moves
       for (int i(1); i <= 9; i++)
       {
         if (availableValues[i - 1] != 0 && std::find(availableMoves.begin(), availableMoves.end(), i) != availableMoves.end())
@@ -72,7 +71,7 @@ Grid generateValidGrid(int *nodeCount)
       }
     }
 
-    PossibilityNode *nextNode = __null;
+    PossibilityNode *nextNode = nullptr;
 
     std::vector<PossibilityNode *> randomizedPossibilites(currentNode->getNextPossibilities().begin(), currentNode->getNextPossibilities().end());
 
@@ -114,7 +113,7 @@ Grid generateValidGrid(int *nodeCount)
       currentNode = nextNode;
     }
   }
-  if (nodeCount != __null)
+  if (nodeCount != nullptr)
     *nodeCount = nodesReached;
   std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
   //printGrid(grid);

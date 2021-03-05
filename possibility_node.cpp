@@ -7,7 +7,7 @@ PossibilityNode::~PossibilityNode()
   for (auto it = m_nextPossibilities.begin(); it != m_nextPossibilities.end(); it++)
   {
     PossibilityNode *possibility = *it;
-    if (possibility != __null)
+    if (possibility != nullptr)
       delete possibility;
   }
 }
@@ -48,6 +48,7 @@ void PossibilityNode::removePossibility(int value)
   }
 
   m_nextPossibilities.erase(*possibilityIterator);
+  delete *possibilityIterator;
 
   if (m_nextPossibilities.size() == 0)
   {
