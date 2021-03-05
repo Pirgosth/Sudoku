@@ -1,47 +1,61 @@
 #include "possibility_node.hpp"
 
-template<int N>
-PossibilityNode<N>::PossibilityNode(bool isValid, int count){
-  for(auto node = m_nodes.begin(); node!=m_nodes.end(); node++){
-    *node = 0;
-  }
-  m_isValid = isValid;
-  m_count = count;
-}
+PossibilityNode::PossibilityNode(int value, int selfRemainingValues) : m_value(value), m_selfRemainingValues(selfRemainingValues), m_locked(false), m_nextPossibilities(&comparePossibilities) {}
 
-template<int N>
-PossibilityNode<N>::~PossibilityNode(){
-  for(auto node = m_nodes.begin(); node!=m_nodes.end(); node++){
-    PossibilityNode* child = *node;
-    if(child != 0)
-      delete child;
+PossibilityNode::~PossibilityNode()
+{
+  for (auto it = m_nextPossibilities.begin(); it != m_nextPossibilities.end(); it++)
+  {
+    PossibilityNode *possibility = *it;
+    if (possibility != __null)
+      delete possibility;
   }
 }
 
-template<int N>
-PossibilityNode<N>*& PossibilityNode<N>::operator[](int index){
-  return m_nodes[index];
+int PossibilityNode::getValue() const
+{
+  return m_value;
 }
 
-template<int N>
-bool PossibilityNode<N>::isValid(){
-  return m_isValid;
+bool PossibilityNode::isValid()
+{
+  return !m_nextPossibilities.empty();
 }
 
-template<int N>
-void PossibilityNode<N>::setValidity(bool validity){
-  m_isValid = validity;
-  // if(!validity){
-  //     for(auto node = m_nodes.begin(); node != m_nodes.end(); node++){
-  //         delete (*node);
-  //         (*node) = 0;
-  //     }
-  // }
+bool PossibilityNode::isLocked()
+{
+  return m_locked;
 }
 
-template<int N>
-int PossibilityNode<N>::getCount(){
-  return m_count;
+std::set<PossibilityNode *, decltype(&comparePossibilities)> &PossibilityNode::getNextPossibilities()
+{
+  return m_nextPossibilities;
 }
 
-template class PossibilityNode<9>;
+void PossibilityNode::addPossibility(int value)
+{
+  m_nextPossibilities.insert(new PossibilityNode(value));
+}
+
+void PossibilityNode::removePossibility(int value)
+{
+  PossibilityNodeIterator possibilityIterator = std::find_if(m_nextPossibilities.begin(), m_nextPossibilities.end(), [value](const PossibilityNode *node) -> bool { return node->getValue() == value; });
+
+  //If not found, nothing to remove
+  if (possibilityIterator == m_nextPossibilities.end())
+  {
+    return;
+  }
+
+  m_nextPossibilities.erase(*possibilityIterator);
+
+  if (m_nextPossibilities.size() == 0)
+  {
+    m_locked = true;
+  }
+}
+
+bool comparePossibilities(const PossibilityNode *p1, const PossibilityNode *p2)
+{
+  return p1->getValue() < p2->getValue();
+}

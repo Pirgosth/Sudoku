@@ -1,16 +1,31 @@
-#include <array>
+#include <algorithm>
+#include <set>
+#include <iostream>
 
-template<int N>
-class PossibilityNode{
+class PossibilityNode;
+
+bool comparePossibilities(const PossibilityNode *p1, const PossibilityNode *p2);
+
+typedef std::set<PossibilityNode *, decltype(&comparePossibilities)>::iterator PossibilityNodeIterator;
+
+class PossibilityNode
+{
 private:
-  std::array<PossibilityNode*, N> m_nodes;
-  bool m_isValid = true;
-  int m_count;
+  const int m_value;
+  const int m_selfRemainingValues;
+  bool m_locked;
+  std::set<PossibilityNode *, decltype(&comparePossibilities)> m_nextPossibilities;
+
 public:
-  PossibilityNode(bool isValid, int count);
+  PossibilityNode(int value, int selfRemainingValues = 9);
   ~PossibilityNode();
-  PossibilityNode*& operator[](int index);
+
+  int getValue() const;
   bool isValid();
-  void setValidity(bool validity);
-  int getCount();
+  bool isLocked();
+
+  std::set<PossibilityNode *, decltype(&comparePossibilities)> &getNextPossibilities();
+
+  void addPossibility(int value);
+  void removePossibility(int value);
 };

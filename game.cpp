@@ -37,109 +37,86 @@ void printGrid(const Grid &grid)
   }
 }
 
-Grid generateValidGrid(int n, int *nodeCount)
+Grid generateValidGrid(int *nodeCount)
 {
 
   Grid grid(createEmptyGrid());
 
-  PossibilityNode<9> rootNode(true, 1);
-  for (int i(0); i < 9; i++)
-  {
-    rootNode[i] = new PossibilityNode<9>(true, 9);
-  }
+  PossibilityNode rootNode(-1);
 
-  std::vector<PossibilityNode<9> *> nodesHistory;
-  std::vector<int> valuesHistory;
+  std::vector<PossibilityNode *> nodesHistory;
 
-  PossibilityNode<9> *currentNode(&rootNode);
+  int availableValues[9] = {9, 9, 9, 9, 9, 9, 9, 9, 9};
+
+  PossibilityNode *currentNode = &rootNode;
 
   int nodesReached(0);
 
-  for (int k(0); k < n; k++)
+  for (int k(0); k < 81; k++)
   {
-    //Generate vector of validValues for the k-th element
-    std::vector<std::pair<int, int>> validValues;
-    if (currentNode != 0)
-    {
-      for (int i(0); i < 9; i++)
-      {
-        if ((*currentNode)[i] != __null && (*currentNode)[i]->isValid())
 
+    //If currentNode is not locked and not valid, this means that this is a new possibility, not an already visited node, so we have to generate next possibilities.
+    if (!currentNode->isLocked() && !currentNode->isValid())
+    {
+
+      std::vector<int> availableMoves = getCaseValues(grid, k / 9, k % 9);
+
+      //Generate possibilities for current node
+      //TODO: Prefilter possibilities by removing impossible moves
+      for (int i(1); i <= 9; i++)
+      {
+        if (availableValues[i - 1] != 0 && std::find(availableMoves.begin(), availableMoves.end(), i) != availableMoves.end())
         {
-          validValues.push_back(std::pair<int, int>(i + 1, (*currentNode)[i]->getCount()));
-          // std::cout << "(" << i+1 << "," << (*currentNode)[i]->getCount() << ")" << std::endl;
+          currentNode->addPossibility(i);
         }
       }
     }
 
-    // std::cout << "There's: " << validValues.size() << " validValues" << std::endl;
+    PossibilityNode *nextNode = __null;
 
-    int currentValue(-1);
-    bool isNodeValid(true);
+    std::vector<PossibilityNode *> randomizedPossibilites(currentNode->getNextPossibilities().begin(), currentNode->getNextPossibilities().end());
 
-    do
+    std::random_shuffle(randomizedPossibilites.begin(), randomizedPossibilites.end());
+
+    for (auto it = randomizedPossibilites.begin(); it != randomizedPossibilites.end(); it++)
     {
       nodesReached++;
-      //If there is no more validValues, node is invalid
-      if (validValues.size() == 0)
+      PossibilityNode *currentPossibility = *it;
+      grid[k / 9][k % 9] = currentPossibility->getValue();
+
+      if (verifyLine(grid, k / 9) && verifyColumn(grid, k % 9) && verifySquare(grid, (int)((k / 9) / 3) * 3 + ((k % 9) / 3)))
       {
-        isNodeValid = false;
-        // std::cout << "No more validValues in list, abort current Node" << std::endl;
+        nextNode = currentPossibility;
         break;
       }
 
-      //Create uniform distribution to get random value from validValues
-      int rv(randRange(0, validValues.size() - 1));
-      grid[k / 9][k % 9] = validValues[rv].first;
+      currentNode->removePossibility(currentPossibility->getValue());
+    }
 
-      //We decrease the value selected
-      validValues[rv].second--;
-
-      //If there's no more count of a value, we remove it from the list of validValues
-      if (validValues[rv].second <= 0)
-      {
-        validValues.erase(validValues.begin() + rv);
-      }
-
-    } while (!(verifyLine(grid, k / 9) && verifyColumn(grid, k % 9) && verifySquare(grid, (int)((k / 9) / 3) * 3 + ((k % 9) / 3))));
-    // printGrid(grid);
-    // getLineValues(grid, k/9);
-    // getColumnValues(grid, k%9);
-    // getSquareValues(grid, (int)((k/9)/3)*3+((k%9)/3));
-    // std::cout << "Carre: " << (int)((k/9)/3)*3+((k%9)/3) << "\tligne: " << k/9 << "\tcolonne: " << k%9 << std::endl;
-    // std::system("read");
-    // }while(!verifyGrid(grid));
-    if (!isNodeValid)
+    //If there is no next possibilities, we revert one step back in node history
+    if (!currentNode->isValid())
     {
-      // printGrid(grid);
-      currentNode->setValidity(false);
+      int possibilityValueToRemove = currentNode->getValue();
       currentNode = nodesHistory[nodesHistory.size() - 1];
+      currentNode->removePossibility(possibilityValueToRemove);
+      availableValues[possibilityValueToRemove - 1] += 1;
       nodesHistory.pop_back();
-      valuesHistory.pop_back();
       grid[k / 9][k % 9] = 0;
       k -= 2;
       continue;
     }
+
     if (k < 80)
     {
-      currentValue = grid[k / 9][k % 9];
-      std::array<int, 9> lv(getLineValues(grid, (k + 1) / 9)), cv(getColumnValues(grid, (k + 1) % 9)), sv(getSquareValues(grid, (int)(((k + 1) / 9) / 3) * 3 + (((k + 1) % 9) / 3)));
-
-      for (int i(0); i < 9; i++)
-      {
-        bool validity(true);
-        validity = lv[i] == 1 && cv[i] == 1 && sv[i] == 1;
-        (*(*currentNode)[currentValue - 1])[i] = new PossibilityNode<9>(validity, i == currentValue - 1 ? (*currentNode)[i]->getCount() - 1 : (*currentNode)[i]->getCount());
-      }
-
-      valuesHistory.push_back(currentValue);
+      int currentValue = grid[k / 9][k % 9];
+      availableValues[currentValue - 1] -= 1;
       nodesHistory.push_back(currentNode);
-      currentNode = (*currentNode)[currentValue - 1];
+      currentNode = nextNode;
     }
   }
-  if (nodeCount != 0)
+  if (nodeCount != __null)
     *nodeCount = nodesReached;
-  // std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
+  std::cout << "Grid generated after reaching: " << nodesReached << " nodes" << std::endl;
   //printGrid(grid);
   return grid;
 }
@@ -152,7 +129,7 @@ float averageGridNodeCount(const int n)
   int timeout = SDL_GetTicks();
   for (int i(0); i < n; i++)
   {
-    generateValidGrid(81, &currentNodeCount);
+    generateValidGrid(&currentNodeCount);
     // std::cout << currentNodeCount << std::endl;
     values.push_back(currentNodeCount);
     totalNodeCount += currentNodeCount;
@@ -189,7 +166,6 @@ void Case::loadTexture(const SpriteManager &manager)
 
 void Case::destroyTexture()
 {
-  delete g_font;
   SDL_DestroyTexture(g_texture_selected);
   SDL_DestroyTexture(g_texture_default);
 }
@@ -298,7 +274,8 @@ void Case::removeState(const State &state)
   setState(m_state & ~state);
 }
 
-bool Case::hasState(const State &state){
+bool Case::hasState(const State &state)
+{
   return (this->m_state & state) != 0;
 }
 
@@ -517,7 +494,7 @@ bool isGridSolvent(const Grid &grid)
 
 std::pair<Grid, Grid> generatePlayableGrid(int n, int seed)
 {
-  Grid solution(generateValidGrid(81));
+  Grid solution(generateValidGrid());
   printGrid(solution);
   Grid grid;
   for (int i(0); i < 9; i++)

@@ -16,7 +16,7 @@ typedef std::array<std::array<int, 9>, 9> Grid;
 
 Grid createEmptyGrid();
 void printGrid(const Grid &grid);
-Grid generateValidGrid(int n, int *nodeCount = 0);
+Grid generateValidGrid(int *nodeCount = 0);
 float averageGridNodeCount(const int n);
 
 class Case
