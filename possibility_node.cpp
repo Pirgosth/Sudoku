@@ -47,8 +47,8 @@ void PossibilityNode::removePossibility(int value)
     return;
   }
 
-  m_nextPossibilities.erase(*possibilityIterator);
   delete *possibilityIterator;
+  m_nextPossibilities.erase(possibilityIterator);
 
   if (m_nextPossibilities.size() == 0)
   {

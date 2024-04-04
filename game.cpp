@@ -146,42 +146,37 @@ float averageGridNodeCount(const int n)
   return average;
 }
 
-SDL_Texture *Case::g_texture_default(0);
-SDL_Texture *Case::g_texture_selected(0);
-SDL_Texture *Case::g_texture_valid(0);
-SDL_Texture *Case::g_texture_invalid(0);
-Font *Case::g_font(0);
+std::shared_ptr<SDL_Texture> Case::g_texture_default;
+std::shared_ptr<SDL_Texture> Case::g_texture_selected;
+std::shared_ptr<SDL_Texture> Case::g_texture_valid;
+std::shared_ptr<SDL_Texture> Case::g_texture_invalid;
+std::shared_ptr<TTF_Font> Case::g_font;
 
-void Case::loadTexture(const SpriteManager &manager)
+void Case::loadTexture(std::shared_ptr<SDL_Renderer> renderer)
 {
-  g_texture_default = _load_texture_from_file(manager.getContext().renderer, "./sources/default.png");
-  g_texture_selected = _load_texture_from_file(manager.getContext().renderer, "./sources/selected.png");
-  g_texture_valid = _load_texture_from_file(manager.getContext().renderer, "./sources/valid.png");
-  g_texture_invalid = _load_texture_from_file(manager.getContext().renderer, "./sources/invalid.png");
-  g_font = new Font("./sources/DejaVuSans.ttf");
+  g_texture_default = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/default.png"), &SDL_DestroyTexture);
+  g_texture_selected = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/selected.png"), &SDL_DestroyTexture);
+  g_texture_valid = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/valid.png"), &SDL_DestroyTexture);
+  g_texture_invalid = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/invalid.png"), &SDL_DestroyTexture);
+  g_font = std::shared_ptr<TTF_Font>(TTF_OpenFont("./sources/DejaVuSans.ttf", 30), &TTF_CloseFont);
 }
 
-void Case::destroyTexture()
+Case::Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i):
+  m_renderer(renderer),
+  m_sprite(renderer, g_texture_default, pos, {CASE_LENGTH, CASE_LENGTH}),
+  m_texte(renderer, g_font, pos, std::to_string(i), {255, 255, 255, 255})
 {
-  SDL_DestroyTexture(g_texture_selected);
-  SDL_DestroyTexture(g_texture_default);
-}
+  int x = m_sprite.getPosition().x + (m_sprite.getSize().x - m_texte.getSize().x) / 2;
+  int y = m_sprite.getPosition().y + (m_sprite.getSize().y - m_texte.getSize().y) / 2;
 
-Case::Case(Pos pos, int i)
-{
-  m_sprite = new Sprite(g_texture_default, pos, {CASE_LENGTH, CASE_LENGTH});
-  m_texte = new TextSprite("a", pos, *g_font, {255, 255, 255, 255}, 30, {0, 0, 0, 0});
-  m_texte->pos({m_sprite->pos().x + (m_sprite->size().w - m_texte->size().w) / 2, m_sprite->pos().y + (m_sprite->size().h - m_texte->size().h) / 2});
+  m_texte.setPosition({x, y});
   setValue(i);
 }
 
 void Case::draw()
 {
-  m_sprite->draw();
-  if (m_texte->isEnabled())
-  {
-    m_texte->draw();
-  }
+  m_sprite.draw();
+  m_texte.draw();
 }
 
 int Case::getValue()
@@ -193,14 +188,14 @@ void Case::setValue(int value)
 {
   if (value == 0)
   {
-    m_texte->disable();
+    m_texte.disable();
   }
   else
   {
-    m_texte->enable();
+    m_texte.enable();
   }
   m_value = value;
-  m_texte->setText(std::to_string(m_value));
+  m_texte.setText(std::to_string(m_value));
 }
 
 void Case::lock()
@@ -218,12 +213,6 @@ bool Case::isLocked()
   return m_isLocked;
 }
 
-Case::~Case()
-{
-  delete m_texte;
-  delete m_sprite;
-}
-
 bool Case::isValid()
 {
   return (this->m_state & Valid) != 0;
@@ -239,23 +228,23 @@ void Case::setState(const State &state)
   m_state = state;
   if (m_state == Default)
   {
-    m_sprite->setTexture(g_texture_default);
+    m_sprite.setTexture(g_texture_default);
   }
   else
   {
     if (this->hasState(Selected))
     {
-      m_sprite->setTexture(g_texture_selected);
+      m_sprite.setTexture(g_texture_selected);
     }
     else if (this->hasState(Verified))
     {
       if (this->hasState(Valid))
       {
-        m_sprite->setTexture(g_texture_valid);
+        m_sprite.setTexture(g_texture_valid);
       }
       else
       {
-        m_sprite->setTexture(g_texture_invalid);
+        m_sprite.setTexture(g_texture_invalid);
       }
     }
   }

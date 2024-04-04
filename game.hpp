@@ -4,13 +4,19 @@
 #define CASE_LENGTH 50
 #define CASE_SPACE 6
 
-#include <Stone/Sprite/sprite.h>
-
 #include <iostream>
+#include <array>
 #include <vector>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+
+#include "maths.hpp"
 #include "possibility_node.hpp"
 #include "random.hpp"
+#include "Graphics/Sprite.hpp"
+#include "Graphics/TextSprite.hpp"
 
 typedef std::array<std::array<int, 9>, 9> Grid;
 
@@ -32,25 +38,24 @@ public:
   typedef enum State State;
 
 private:
-  Sprite *m_sprite = 0;
-  TextSprite *m_texte = 0;
-  static SDL_Texture *g_texture_default;
-  static SDL_Texture *g_texture_selected;
-  static SDL_Texture *g_texture_valid;
-  static SDL_Texture *g_texture_invalid;
-  static Font *g_font;
+  std::shared_ptr<SDL_Renderer> m_renderer;
+  Sprite m_sprite;
+  TextSprite m_texte;
+  static std::shared_ptr<SDL_Texture> g_texture_default;
+  static std::shared_ptr<SDL_Texture> g_texture_selected;
+  static std::shared_ptr<SDL_Texture> g_texture_valid;
+  static std::shared_ptr<SDL_Texture> g_texture_invalid;
+  static std::shared_ptr<TTF_Font> g_font;
   int m_value = 0;
   bool m_isLocked = false;
   State m_state = Default;
 
 public:
-  Case(Pos pos, int i);
+  Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i);
   void draw();
-  static void loadTexture(const SpriteManager &manager);
-  static void destroyTexture();
+  static void loadTexture(std::shared_ptr<SDL_Renderer> renderer);
   int getValue();
   void setValue(int value);
-  ~Case();
   void lock();
   void unlock();
   bool isLocked();
