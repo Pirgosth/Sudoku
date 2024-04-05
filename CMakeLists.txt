@@ -13,8 +13,10 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(Sudoku main.cpp game.hpp game.cpp random.hpp random.cpp possibility_node.hpp possibility_node.cpp)
 
 if(WIN32)
-    target_link_libraries(Sudoku mingw32 SDL2main
-    )
+    target_link_libraries(Sudoku mingw32 SDL2main)
+    if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+        target_link_options(Sudoku PRIVATE -mwindows)
+    endif()
 endif()
 target_link_libraries(Sudoku SDL2 SDL2_image SDL2_ttf)
 
