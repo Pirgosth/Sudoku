@@ -2,6 +2,9 @@
 
 void TextSprite::reloadTextTexture()
 {
+    if (!m_font)
+        return;
+    
     SDL_Surface *tmpSurface = TTF_RenderText_Blended(m_font.get(), m_text.c_str(), m_color);
     m_texture = std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>(SDL_CreateTextureFromSurface(m_renderer.get(), tmpSurface), SDL_DestroyTexture);
 
@@ -22,6 +25,12 @@ void TextSprite::draw()
     
     SDL_Rect dstRect = {m_pos.x, m_pos.y, m_size.x, m_size.y};
     SDL_RenderCopy(m_renderer.get(), m_texture.get(), nullptr, &dstRect);
+}
+
+void TextSprite::setFont(std::shared_ptr<TTF_Font> font)
+{
+    this->m_font = font;
+    reloadTextTexture();
 }
 
 void TextSprite::setText(const std::string &text)

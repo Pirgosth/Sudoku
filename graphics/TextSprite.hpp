@@ -26,6 +26,7 @@ private:
 public:
     TextSprite(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> font, Vector2i pos, std::string text, SDL_Color color);
     void draw();
+    void setFont(std::shared_ptr<TTF_Font> font);
     void setText(const std::string &text);
     void setPosition(Vector2i pos);
     const Vector2i &getSize() const;

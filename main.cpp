@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
   Sprite gridBg(renderer, bgTexture, {0, 0}, {9 * CASE_LENGTH + 10 * CASE_SPACE, 9 * CASE_LENGTH + 10 * CASE_SPACE});
   // gridBg.setColorFilter({200, 200, 200, 0});
 
-  Case::loadTexture(renderer);
-
   // int nodeAverage = averageGridNodeCount(10000);
 
   // std::cout << "Nodes encountered average: " << nodeAverage << std::endl;

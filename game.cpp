@@ -146,26 +146,27 @@ float averageGridNodeCount(const int n)
   return average;
 }
 
-std::shared_ptr<SDL_Texture> Case::g_texture_default;
-std::shared_ptr<SDL_Texture> Case::g_texture_selected;
-std::shared_ptr<SDL_Texture> Case::g_texture_valid;
-std::shared_ptr<SDL_Texture> Case::g_texture_invalid;
-std::shared_ptr<TTF_Font> Case::g_font;
-
-void Case::loadTexture(std::shared_ptr<SDL_Renderer> renderer)
-{
-  g_texture_default = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/default.png"), &SDL_DestroyTexture);
-  g_texture_selected = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/selected.png"), &SDL_DestroyTexture);
-  g_texture_valid = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/valid.png"), &SDL_DestroyTexture);
-  g_texture_invalid = std::shared_ptr<SDL_Texture>(IMG_LoadTexture(renderer.get(), "./sources/invalid.png"), &SDL_DestroyTexture);
-  g_font = std::shared_ptr<TTF_Font>(TTF_OpenFont("./sources/DejaVuSans.ttf", 30), &TTF_CloseFont);
-}
-
 Case::Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i):
   m_renderer(renderer),
-  m_sprite(renderer, g_texture_default, pos, {CASE_LENGTH, CASE_LENGTH}),
-  m_texte(renderer, g_font, pos, std::to_string(i), {255, 255, 255, 255})
+  m_sprite(renderer, std::shared_ptr<SDL_Texture>(nullptr), pos, {CASE_LENGTH, CASE_LENGTH}),
+  m_texte(renderer, std::shared_ptr<TTF_Font>(nullptr), pos, std::to_string(i), {255, 255, 255, 255})
 {
+  for (auto const &[key, path]: std::map<std::string, std::string>({
+    {"default", "./sources/default.png"},
+    {"selected", "./sources/selected.png"},
+    {"valid", "./sources/valid.png"},
+    {"invalid", "./sources/invalid.png"},
+  }))
+  {
+    m_texturesManager.addTexture(key, IMG_LoadTexture(renderer.get(), path.c_str()));
+  }
+
+  m_fontsManager.addFont("default", TTF_OpenFont("./sources/DejaVuSans.ttf", 30));
+
+  m_texte.setFont(m_fontsManager.getFont("default"));
+
+  m_sprite.setTexture(m_texturesManager.getTexture("default"));
+
   int x = m_sprite.getPosition().x + (m_sprite.getSize().x - m_texte.getSize().x) / 2;
   int y = m_sprite.getPosition().y + (m_sprite.getSize().y - m_texte.getSize().y) / 2;
 
@@ -228,23 +229,23 @@ void Case::setState(const State &state)
   m_state = state;
   if (m_state == Default)
   {
-    m_sprite.setTexture(g_texture_default);
+    m_sprite.setTexture(m_texturesManager.getTexture("default"));
   }
   else
   {
     if (this->hasState(Selected))
     {
-      m_sprite.setTexture(g_texture_selected);
+      m_sprite.setTexture(m_texturesManager.getTexture("selected"));
     }
     else if (this->hasState(Verified))
     {
       if (this->hasState(Valid))
       {
-        m_sprite.setTexture(g_texture_valid);
+        m_sprite.setTexture(m_texturesManager.getTexture("valid"));
       }
       else
       {
-        m_sprite.setTexture(g_texture_invalid);
+        m_sprite.setTexture(m_texturesManager.getTexture("invalid"));
       }
     }
   }

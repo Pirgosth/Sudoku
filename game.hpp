@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <array>
+#include <map>
 #include <vector>
 
 #include <SDL2/SDL.h>
@@ -15,8 +16,10 @@
 #include "maths.hpp"
 #include "possibility_node.hpp"
 #include "random.hpp"
+#include "Graphics/FontsManager.hpp"
 #include "Graphics/Sprite.hpp"
 #include "Graphics/TextSprite.hpp"
+#include "Graphics/TexturesManager.hpp"
 
 typedef std::array<std::array<int, 9>, 9> Grid;
 
@@ -41,11 +44,8 @@ private:
   std::shared_ptr<SDL_Renderer> m_renderer;
   Sprite m_sprite;
   TextSprite m_texte;
-  static std::shared_ptr<SDL_Texture> g_texture_default;
-  static std::shared_ptr<SDL_Texture> g_texture_selected;
-  static std::shared_ptr<SDL_Texture> g_texture_valid;
-  static std::shared_ptr<SDL_Texture> g_texture_invalid;
-  static std::shared_ptr<TTF_Font> g_font;
+  TexturesManager m_texturesManager;
+  FontsManager m_fontsManager;
   int m_value = 0;
   bool m_isLocked = false;
   State m_state = Default;
@@ -53,7 +53,6 @@ private:
 public:
   Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i);
   void draw();
-  static void loadTexture(std::shared_ptr<SDL_Renderer> renderer);
   int getValue();
   void setValue(int value);
   void lock();
