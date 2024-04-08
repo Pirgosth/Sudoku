@@ -14,6 +14,7 @@ private:
 public:
     bool addFont(std::string key, TTF_Font *font);
     std::shared_ptr<TTF_Font> getFont(std::string key) const;
+    void clear();
 };
 
 #endif // FONTSMANAGER_H_INCLUDED

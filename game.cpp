@@ -146,31 +146,25 @@ float averageGridNodeCount(const int n)
   return average;
 }
 
-Case::Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i):
+Case::Case(std::shared_ptr<SDL_Renderer> renderer, TexturesManager &texturesManager, FontsManager &fontsManager, Vector2i pos, int i):
   m_renderer(renderer),
-  m_sprite(renderer, std::shared_ptr<SDL_Texture>(nullptr), pos, {CASE_LENGTH, CASE_LENGTH}),
-  m_texte(renderer, std::shared_ptr<TTF_Font>(nullptr), pos, std::to_string(i), {255, 255, 255, 255})
+  m_texturesManager(texturesManager),
+  m_fontsManager(fontsManager),
+  m_sprite(renderer, texturesManager.getTexture("default"), pos, {CASE_LENGTH, CASE_LENGTH}),
+  m_texte(renderer, fontsManager.getFont("default"), pos, std::to_string(i), {255, 255, 255, 255})
 {
-  for (auto const &[key, path]: std::map<std::string, std::string>({
-    {"default", "./sources/default.png"},
-    {"selected", "./sources/selected.png"},
-    {"valid", "./sources/valid.png"},
-    {"invalid", "./sources/invalid.png"},
-  }))
-  {
-    m_texturesManager.addTexture(key, IMG_LoadTexture(renderer.get(), path.c_str()));
-  }
-
-  m_fontsManager.addFont("default", TTF_OpenFont("./sources/DejaVuSans.ttf", 30));
-
-  m_texte.setFont(m_fontsManager.getFont("default"));
-
-  m_sprite.setTexture(m_texturesManager.getTexture("default"));
-
   int x = m_sprite.getPosition().x + (m_sprite.getSize().x - m_texte.getSize().x) / 2;
   int y = m_sprite.getPosition().y + (m_sprite.getSize().y - m_texte.getSize().y) / 2;
 
+  for (int j = 0; j < 9; j++)
+  {
+    TextSprite noteSprite(renderer, m_fontsManager.getFont("small"), {0, 0}, std::to_string(j + 1), {255, 255, 255, 255});
+    noteSprite.setPosition({5 + pos.x + (j % 3) * (noteSprite.getSize().x + 10), pos.y + (j / 3) * (noteSprite.getSize().y + 5)});
+    m_notesSprites.push_back(std::move(noteSprite));
+  }
+
   m_texte.setPosition({x, y});
+  m_notes.fill(false);
   setValue(i);
 }
 
@@ -178,6 +172,12 @@ void Case::draw()
 {
   m_sprite.draw();
   m_texte.draw();
+
+  for (int i = 0; i < 9; i++)
+  {
+    if (m_notes[i])
+      m_notesSprites[i].draw();
+  }
 }
 
 int Case::getValue()
@@ -197,6 +197,20 @@ void Case::setValue(int value)
   }
   m_value = value;
   m_texte.setText(std::to_string(m_value));
+
+  if (m_value != 0)
+    m_notes.fill(false);
+}
+
+void Case::addOrRemoveNote(int value)
+{
+  if (value < 1 || 9 < value)
+    return;
+
+  m_notes[value - 1] = !m_notes[value - 1];
+
+  if (m_value != 0)
+    setValue(0);
 }
 
 void Case::lock()

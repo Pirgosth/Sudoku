@@ -13,7 +13,7 @@ void TextSprite::reloadTextTexture()
 }
 
 TextSprite::TextSprite(std::shared_ptr<SDL_Renderer> renderer, std::shared_ptr<TTF_Font> font, Vector2i pos, std::string text, SDL_Color color) : 
-    m_renderer(renderer), m_texture(nullptr, SDL_DestroyTexture), m_font(font), m_text(text), m_color(color), m_enabled(true)
+    m_renderer(renderer), m_texture(nullptr, SDL_DestroyTexture), m_font(font), m_pos(pos), m_text(text), m_color(color), m_enabled(true)
 {
     reloadTextTexture();
 }

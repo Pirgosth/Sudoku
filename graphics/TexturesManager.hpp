@@ -14,6 +14,7 @@ private:
 public:
     bool addTexture(std::string key, SDL_Texture *texture);
     std::shared_ptr<SDL_Texture> getTexture(std::string key) const;
+    void clear();
 };
 
 #endif // TEXTURESMANAGER_H_INCLUDED

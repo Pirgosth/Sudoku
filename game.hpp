@@ -44,17 +44,20 @@ private:
   std::shared_ptr<SDL_Renderer> m_renderer;
   Sprite m_sprite;
   TextSprite m_texte;
-  TexturesManager m_texturesManager;
-  FontsManager m_fontsManager;
+  TexturesManager &m_texturesManager;
+  FontsManager &m_fontsManager;
   int m_value = 0;
   bool m_isLocked = false;
   State m_state = Default;
+  std::array<bool, 9> m_notes;
+  std::vector<TextSprite> m_notesSprites;
 
 public:
-  Case(std::shared_ptr<SDL_Renderer> renderer, Vector2i pos, int i);
+  Case(std::shared_ptr<SDL_Renderer> renderer, TexturesManager &texturesManager, FontsManager &fontsManager, Vector2i pos, int i);
   void draw();
   int getValue();
   void setValue(int value);
+  void addOrRemoveNote(int value);
   void lock();
   void unlock();
   bool isLocked();
@@ -90,4 +93,4 @@ std::pair<Grid, Grid> generatePlayableGrid(int n, int seed = 0);
 
 typedef std::array<std::array<Case, 9>, 9> CaseGrid;
 
-#endif //GAME_H_INCLUDED
+#endif // GAME_H_INCLUDED

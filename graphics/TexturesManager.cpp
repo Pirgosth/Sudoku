@@ -18,3 +18,8 @@ std::shared_ptr<SDL_Texture> TexturesManager::getTexture(std::string key) const
 
     return m_textures.at(key);
 }
+
+void TexturesManager::clear()
+{
+    m_textures.clear();
+}

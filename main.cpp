@@ -10,9 +10,9 @@ typedef std::array<std::array<Case *, 9>, 9> GraphicGrid;
 
 Vector2i getCurrentCase(const GraphicGrid &grid, const Vector2i &pos);
 bool isNumberKey(int key);
-void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Vector2i &current, int key);
+void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Vector2i &current, int key, bool notesMode);
 void refreshGraphicGrid(const GraphicGrid &graphicGrid, const Grid &grid);
-void getGraphicGrid(std::shared_ptr<SDL_Renderer> renderer, const Grid &grid, GraphicGrid &graphicGrid);
+void getGraphicGrid(std::shared_ptr<SDL_Renderer> renderer, TexturesManager &texturesManager, FontsManager &fontsManager, const Grid &grid, GraphicGrid &graphicGrid);
 void destroyGraphicGrid(GraphicGrid &graphicGrid);
 void compareGrids(const GraphicGrid &graphicGrid, const Grid &game, const Grid &solution);
 
@@ -26,12 +26,17 @@ int main(int argc, char *argv[])
   TTF_Init();
  
   SDL_Window *window(0);
-  window = SDL_CreateWindow("Sudoku", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 9 * CASE_LENGTH + 10 * CASE_SPACE, 9 * CASE_LENGTH + 10 * CASE_SPACE, SDL_WINDOW_SHOWN);
+  int windowWidth = 11 * CASE_LENGTH + 10 * CASE_SPACE;
+  int windowHeight = 9 * CASE_LENGTH + 10 * CASE_SPACE;
+  window = SDL_CreateWindow("Sudoku", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 11 * CASE_LENGTH + 10 * CASE_SPACE, 9 * CASE_LENGTH + 10 * CASE_SPACE, SDL_WINDOW_SHOWN);
 
   std::shared_ptr<SDL_Renderer> renderer(SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC), &SDL_DestroyRenderer);
 
   std::shared_ptr<SDL_Texture> bgTexture(IMG_LoadTexture(renderer.get(), "./sources/grid.png"), &SDL_DestroyTexture);
-  Sprite gridBg(renderer, bgTexture, {0, 0}, {9 * CASE_LENGTH + 10 * CASE_SPACE, 9 * CASE_LENGTH + 10 * CASE_SPACE});
+  Sprite gridBg(renderer, bgTexture, {1 * CASE_LENGTH, 0}, {9 * CASE_LENGTH + 10 * CASE_SPACE, 9 * CASE_LENGTH + 10 * CASE_SPACE});
+  
+  std::shared_ptr<SDL_Texture> penTexture(IMG_LoadTexture(renderer.get(), "./sources/pen.png"), &SDL_DestroyTexture);
+  Sprite notesSprite(renderer, penTexture, {windowWidth - CASE_LENGTH / 2 - 16, CASE_LENGTH / 2 + CASE_SPACE - 16}, {32, 32});
   // gridBg.setColorFilter({200, 200, 200, 0});
 
   // int nodeAverage = averageGridNodeCount(10000);
@@ -41,11 +46,28 @@ int main(int argc, char *argv[])
   std::pair<Grid, Grid> grid(generatePlayableGrid(81));
   Grid grille(grid.first);
 
+  TexturesManager texturesManager;
+  FontsManager fontsManager;
+
+  for (auto const &[key, path]: std::map<std::string, std::string>({
+    {"default", "./sources/default.png"},
+    {"selected", "./sources/selected.png"},
+    {"valid", "./sources/valid.png"},
+    {"invalid", "./sources/invalid.png"},
+  }))
+  {
+    texturesManager.addTexture(key, IMG_LoadTexture(renderer.get(), path.c_str()));
+  }
+
+  fontsManager.addFont("default", TTF_OpenFont("./sources/DejaVuSans.ttf", 30));
+  fontsManager.addFont("small", TTF_OpenFont("./sources/DejaVuSans.ttf", 10));
+  
   GraphicGrid test;
 
-  getGraphicGrid(renderer, grille, test);
+  getGraphicGrid(renderer, texturesManager, fontsManager, grille, test);
 
   Vector2i current({-1, -1});
+  bool notesMode = false;
 
   bool quit(false);
   SDL_Event event;
@@ -66,6 +88,7 @@ int main(int argc, char *argv[])
         {
           Vector2i tmp;
           SDL_GetMouseState(&tmp.x, &tmp.y);
+          tmp.x -= 1 * CASE_LENGTH;
           if (current.x != -1)
           {
             if (grille[current.x][current.y] != 0)
@@ -93,7 +116,7 @@ int main(int argc, char *argv[])
         if (isNumberKey(event.key.keysym.sym))
         {
           std::cout << "Number Key pressed" << std::endl;
-          refreshCurrent(grille, test, current, event.key.keysym.sym);
+          refreshCurrent(grille, test, current, event.key.keysym.sym, notesMode);
         }
         switch (event.key.keysym.sym)
         {
@@ -113,6 +136,9 @@ int main(int argc, char *argv[])
         case SDLK_v:
           compareGrids(test, grille, grid.second);
           break;
+        case SDLK_e:
+          notesMode = !notesMode;
+          break;
         default:
           break;
         }
@@ -128,15 +154,19 @@ int main(int argc, char *argv[])
     gridBg.draw();
     drawGrid(test);
 
+    if (notesMode)
+      notesSprite.draw();
+
     SDL_RenderPresent(renderer.get());
   }
+
+  fontsManager.clear();
+  texturesManager.clear();
 
   destroyGraphicGrid(test);
 
   SDL_DestroyWindow(window);
 
-  // TODO: Refactor global fonts and textures in game.hpp to be in a texture manager instead of being global 
-  // (cause exception when destroying font because TTF_QUIT is called before)
   TTF_Quit();
   SDL_Quit();
 
@@ -184,7 +214,7 @@ bool isNumberKey(int key)
   return false;
 }
 
-void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Vector2i &current, int key)
+void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Vector2i &current, int key, bool notesMode)
 {
   std::array<int, 20> numberKeys = {{SDLK_KP_0, SDLK_KP_1, SDLK_KP_2, SDLK_KP_3, SDLK_KP_4, SDLK_KP_5, SDLK_KP_6, SDLK_KP_7, SDLK_KP_8, SDLK_KP_9, SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5, SDLK_6, SDLK_7, SDLK_8, SDLK_9}};
   int index(-1);
@@ -198,8 +228,15 @@ void refreshCurrent(Grid &grid, GraphicGrid &graphicGrid, Vector2i &current, int
   if (current.x != -1)
   {
     graphicGrid[current.x][current.y]->setState(Case::Selected);
-    graphicGrid[current.x][current.y]->setValue(index);
-    grid[current.x][current.y] = index;
+    if (notesMode)
+    {
+      graphicGrid[current.x][current.y]->addOrRemoveNote(index);
+    }
+    else
+    {
+      graphicGrid[current.x][current.y]->setValue(index);
+      grid[current.x][current.y] = index;
+    }
   }
 }
 
@@ -223,13 +260,13 @@ void refreshGraphicGrid(const GraphicGrid &graphicGrid, const Grid &grid)
   }
 }
 
-void getGraphicGrid(std::shared_ptr<SDL_Renderer> renderer, const Grid &grid, GraphicGrid &graphicGrid)
+void getGraphicGrid(std::shared_ptr<SDL_Renderer> renderer, TexturesManager &texturesManager, FontsManager &fontsManager, const Grid &grid, GraphicGrid &graphicGrid)
 {
   for (int i(0); i < 9; i++)
   {
     for (int j(0); j < 9; j++)
     {
-      graphicGrid[i][j] = new Case(renderer, {j * CASE_LENGTH + (j + 1) * CASE_SPACE, i * CASE_LENGTH + (i + 1) * CASE_SPACE}, grid[i][j]);
+      graphicGrid[i][j] = new Case(renderer, texturesManager, fontsManager, {CASE_LENGTH + j * CASE_LENGTH + (j + 1) * CASE_SPACE, i * CASE_LENGTH + (i + 1) * CASE_SPACE}, grid[i][j]);
       if (grid[i][j] != 0)
       {
         graphicGrid[i][j]->lock();

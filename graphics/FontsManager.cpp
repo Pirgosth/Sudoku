@@ -18,3 +18,8 @@ std::shared_ptr<TTF_Font> FontsManager::getFont(std::string key) const
 
     return m_fonts.at(key);
 }
+
+void FontsManager::clear()
+{
+    m_fonts.clear();
+}
